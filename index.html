@@ -3,1686 +3,580 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>FastFile - TXT Sharing</title>
-
+    <title>FastFile - Modern TXT Sharing</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    
     <style>
-        .loader {
-            border-top-color: #2563eb;
-            animation: spinner 1s linear infinite;
+        body {
+            font-family: 'Inter', sans-serif;
         }
-
-        @keyframes spinner {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom Loading Spinner */
+        .spinner-ring {
+            border: 3px solid rgba(59, 130, 246, 0.15);
+            border-left-color: #2563eb;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        /* Pulse Animation for Dropzone Hover */
+        .dropzone-active {
+            border-color: #3b82f6 !important;
+            background-color: rgba(239, 246, 255, 0.7) !important;
         }
     </style>
 </head>
 
-<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-blue-500 selection:text-white">
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none"></div>
 
     <!-- NAVBAR -->
-    <nav class="bg-white border-b border-gray-200">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-
-            <div class="flex justify-between h-16">
-
-                <div class="flex items-center">
-                    <span class="text-xl font-bold text-blue-600">
+    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-slate-200/80">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                        </svg>
+                    </div>
+                    <span class="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
                         FastFile
                     </span>
                 </div>
 
-                <div class="flex space-x-4 items-center">
-
-                    <button
-                        id="tab-upload-btn"
-                        class="text-blue-600 border-b-2 border-blue-600 px-3 py-2 text-sm font-medium">
+                <!-- Navigation Tabs -->
+                <div class="flex bg-slate-100 p-1 rounded-xl">
+                    <button id="tab-upload-btn" class="px-4 py-1.5 text-sm font-semibold rounded-lg bg-white text-blue-600 shadow-sm transition-all duration-200">
                         Upload
                     </button>
-
-                    <button
-                        id="tab-download-btn"
-                        class="text-gray-500 hover:text-gray-700 px-3 py-2 text-sm font-medium">
+                    <button id="tab-download-btn" class="px-4 py-1.5 text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition-all duration-200">
                         Download
                     </button>
-
                 </div>
-
             </div>
-
         </div>
     </nav>
 
 
-    <!-- MAIN -->
-    <main class="flex-grow flex items-center justify-center p-4">
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow flex items-center justify-center p-4 sm:p-6">
+        <div class="w-full max-w-lg bg-white rounded-2xl shadow-xl shadow-slate-200/60 border border-slate-100 p-6 sm:p-8 transition-all">
 
-        <div class="w-full max-w-lg bg-white rounded-xl shadow-md border border-gray-100 p-6 md:p-8">
-
-
-            <!-- ========================= -->
-            <!-- UPLOAD VIEW -->
-            <!-- ========================= -->
-
-            <div id="upload-view">
-
-                <h2 class="text-2xl font-bold mb-2 text-center text-gray-800">
-                    Send TXT Files
-                </h2>
-
-                <p class="text-sm text-gray-500 text-center mb-6">
-                    Share text files with a temporary secret key.
-                </p>
-
+            <!-- ================= UPLOAD VIEW ================= -->
+            <div id="upload-view" class="space-y-6">
+                <div class="text-center">
+                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Send TXT Files</h1>
+                    <p class="text-sm text-slate-500 mt-1">Share secure text files instantly with a secret 6-digit key.</p>
+                </div>
 
                 <!-- DROP ZONE -->
+                <div id="drop-zone" class="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center hover:border-blue-500/80 transition-all cursor-pointer bg-slate-50/50 hover:bg-blue-50/30 group">
+                    <input type="file" id="file-input" multiple accept=".txt,text/plain" class="hidden">
+                    
+                    <div class="w-14 h-14 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center mx-auto mb-4 text-slate-400 group-hover:text-blue-600 group-hover:scale-110 transition-all duration-300">
+                        <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                    </div>
 
-                <div
-                    id="drop-zone"
-                    class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer bg-gray-50">
-
-                    <input
-                        type="file"
-                        id="file-input"
-                        multiple
-                        accept=".txt,text/plain"
-                        class="hidden">
-
-
-                    <svg
-                        class="mx-auto h-12 w-12 text-gray-400 mb-3"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor">
-
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-
-                    </svg>
-
-
-                    <p class="text-gray-600 mb-1">
-                        Click to browse or drag & drop
+                    <p class="text-sm font-semibold text-slate-700 group-hover:text-blue-600 transition-colors">
+                        Click to browse <span class="text-slate-400 font-normal">or drag & drop</span>
                     </p>
-
-
-                    <p
-                        class="text-xs text-gray-400"
-                        id="file-count-display">
-
-                        TXT files only. Maximum 900 KB per file.
-
+                    <p class="text-xs text-slate-400 mt-2 font-medium" id="file-count-display">
+                        TXT files only (Max 900 KB per file)
                     </p>
-
                 </div>
 
-
-                <!-- UPLOAD BUTTON -->
-
-                <button
-                    id="upload-btn"
-                    class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors hidden">
-
-                    Save TXT Files
-
+                <!-- UPLOAD ACTION BUTTON -->
+                <button id="upload-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl shadow-lg shadow-blue-500/20 active:scale-[0.99] transition-all hidden flex items-center justify-center space-x-2">
+                    <span>Save & Share Files</span>
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                 </button>
 
-
-                <!-- LOADING -->
-
-                <div
-                    id="upload-loading"
-                    class="hidden mt-6 flex flex-col items-center">
-
-                    <div
-                        class="loader rounded-full border-4 border-gray-200 h-10 w-10 mb-3">
-                    </div>
-
-
-                    <p
-                        id="upload-progress-text"
-                        class="text-sm text-gray-600 font-medium text-center">
-
-                        Saving to Firestore...
-
+                <!-- UPLOAD LOADING STATE -->
+                <div id="upload-loading" class="hidden py-6 flex flex-col items-center justify-center space-y-3 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="spinner-ring w-10 h-10"></div>
+                    <p id="upload-progress-text" class="text-sm font-medium text-slate-700 text-center animate-pulse">
+                        Generating secret key...
                     </p>
-
                 </div>
 
+                <!-- UPLOAD SUCCESS STATE -->
+                <div id="upload-success" class="hidden bg-emerald-50/60 border border-emerald-100 rounded-2xl p-6 space-y-4">
+                    <div class="flex items-center space-x-3 text-emerald-800">
+                        <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                            <svg class="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-base text-emerald-900">Files Saved Successfully!</h3>
+                            <p class="text-xs text-emerald-700">Valid for 24 hours</p>
+                        </div>
+                    </div>
 
-                <!-- SUCCESS -->
-
-                <div
-                    id="upload-success"
-                    class="hidden mt-6 bg-green-50 border border-green-200 rounded-lg p-5">
-
-                    <h3 class="text-green-800 font-bold mb-2 flex items-center">
-
-                        <svg
-                            class="w-5 h-5 mr-2"
-                            fill="currentColor"
-                            viewBox="0 0 20 20">
-
-                            <path
-                                fill-rule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 001.414 0l4-4z"
-                                clip-rule="evenodd">
-                            </path>
-
-                        </svg>
-
-                        Files Saved!
-
-                    </h3>
-
-
-                    <p class="text-xs text-gray-600 mb-4">
-                        Your secret key is valid for 24 hours.
-                    </p>
-
-
-                    <div
-                        class="bg-white p-3 rounded border border-gray-200 flex justify-between items-center mb-3">
-
-                        <span
-                            id="secret-key-display"
-                            class="font-mono text-lg font-bold text-gray-800 tracking-wider">
-
-                            XXXXXX
-
-                        </span>
-
-
-                        <button
-                            id="copy-key-btn"
-                            class="text-blue-600 hover:text-blue-800 text-sm font-semibold">
-
+                    <div class="bg-white p-4 rounded-xl border border-emerald-200/80 shadow-sm flex justify-between items-center">
+                        <span id="secret-key-display" class="font-mono text-2xl font-bold text-slate-900 tracking-widest">XXXXXX</span>
+                        <button id="copy-key-btn" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                             Copy Key
-
                         </button>
-
                     </div>
 
+                    <p id="upload-time-display" class="text-xs text-slate-400 text-center"></p>
 
-                    <p
-                        id="upload-time-display"
-                        class="text-xs text-gray-500 mb-4">
-                    </p>
-
-
-                    <button
-                        id="reset-upload-btn"
-                        class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded">
-
-                        Send Another
-
+                    <button id="reset-upload-btn" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 px-4 rounded-xl text-sm transition-colors">
+                        Send Another File
                     </button>
-
                 </div>
-
             </div>
 
 
-            <!-- ========================= -->
-            <!-- DOWNLOAD VIEW -->
-            <!-- ========================= -->
+            <!-- ================= DOWNLOAD VIEW ================= -->
+            <div id="download-view" class="hidden space-y-6">
+                <div class="text-center">
+                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Receive TXT Files</h1>
+                    <p class="text-sm text-slate-500 mt-1">Enter your 6-character key to access your files.</p>
+                </div>
 
-            <div id="download-view" class="hidden">
-
-                <h2 class="text-2xl font-bold mb-2 text-center text-gray-800">
-                    Receive TXT Files
-                </h2>
-
-                <p class="text-sm text-gray-500 text-center mb-6">
-                    Enter the secret key you received.
-                </p>
-
-
-                <div class="mb-6">
-
-                    <label
-                        class="block text-sm font-medium text-gray-700 mb-2">
-
-                        Secret Key
-
-                    </label>
-
-
-                    <div class="flex">
-
+                <div class="space-y-3">
+                    <div class="relative flex rounded-xl shadow-sm">
                         <input
                             type="text"
                             id="search-key"
                             placeholder="e.g. A1B2C3"
                             maxlength="6"
                             autocomplete="off"
-                            class="uppercase font-mono flex-grow border border-gray-300 rounded-l-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
-
-
-                        <button
-                            id="search-btn"
-                            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 rounded-r-lg">
-
-                            Search
-
+                            class="w-full font-mono uppercase px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-semibold text-lg tracking-wider placeholder:font-sans placeholder:tracking-normal placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+                        
+                        <button id="search-btn" class="absolute right-1.5 top-1.5 bottom-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 rounded-lg text-sm transition-all shadow-md shadow-blue-500/10 flex items-center justify-center min-w-[90px]">
+                            <span id="search-btn-text">Search</span>
                         </button>
-
                     </div>
+                </div>
 
+                <!-- DOWNLOAD SEARCH LOADING (UI/UX Improvement) -->
+                <div id="download-loading" class="hidden py-8 flex flex-col items-center justify-center space-y-3 bg-slate-50/50 rounded-2xl border border-slate-100">
+                    <div class="spinner-ring w-9 h-9"></div>
+                    <p class="text-xs font-semibold text-slate-500">Searching Firestore records...</p>
+                </div>
 
-                    <p
-                        id="search-error"
-                        class="text-red-500 text-sm mt-2 hidden">
+                <!-- NO SEARCH FOUND STATE UI/UX -->
+                <div id="no-results" class="hidden py-8 px-6 text-center bg-slate-50/80 rounded-2xl border border-slate-200/60">
+                    <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                        </svg>
+                    </div>
+                    <h3 id="no-results-title" class="text-base font-bold text-slate-800">No Files Found</h3>
+                    <p id="no-results-desc" class="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+                        We couldn't find any active files matching that key. Please verify the code and try again.
                     </p>
-
                 </div>
 
-
-                <!-- RESULTS -->
-
-                <div
-                    id="download-results"
-                    class="hidden">
-
-                    <h3 class="font-bold text-gray-800 mb-3 border-b pb-2">
-                        Available TXT Files
-                    </h3>
-
-
-                    <ul
-                        id="file-list"
-                        class="space-y-3 mb-4 max-h-80 overflow-y-auto pr-2">
-                    </ul>
-
+                <!-- SEARCH RESULTS LIST -->
+                <div id="download-results" class="hidden space-y-3">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">Available TXT Files</h3>
+                    <ul id="file-list" class="space-y-2.5 max-h-80 overflow-y-auto pr-1"></ul>
                 </div>
-
             </div>
 
         </div>
-
     </main>
 
 
-    <!-- FOOTER -->
-
-    <footer class="bg-white border-t border-gray-200 mt-auto py-6">
-
-        <div
-            class="max-w-4xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between">
-
-            <p class="text-sm text-gray-500">
-                Open Source File Sharing System
-            </p>
-
-            <p class="text-sm text-gray-500 mt-2 md:mt-0 font-medium">
-                FastFile
-            </p>
-
+    <!-- FOOTER WITH GITHUB ACCOUNT CREDIT -->
+    <footer class="bg-white/80 backdrop-blur-md border-t border-slate-200/80 py-6 mt-auto">
+        <div class="max-w-5xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+            <p class="font-medium">FastFile — Open Source TXT File Sharing System</p>
+            
+            <div class="flex items-center space-x-1.5 font-medium">
+                <span>Created by</span>
+                <a href="https://github.com/Arjunren" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-1 text-slate-800 hover:text-blue-600 font-semibold transition-colors bg-slate-100 hover:bg-blue-50 px-2.5 py-1 rounded-md border border-slate-200/80">
+                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                    </svg>
+                    <span>Arjunren</span>
+                </a>
+            </div>
         </div>
-
     </footer>
 
 
-    <!-- ====================================================== -->
-    <!-- FIREBASE -->
-    <!-- ====================================================== -->
-
+    <!-- FIREBASE & LOGIC -->
     <script type="module">
-
-        /*
-        ==========================================================
-        FIREBASE
-        ==========================================================
-        */
-
-        import {
-            initializeApp
-        } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-
-
-        import {
-            getFirestore,
-            doc,
-            setDoc,
-            getDoc,
-            collection,
-            getDocs,
-            Timestamp
-        } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
-
-
-        /*
-        ==========================================================
-        FIREBASE CONFIG
-        ==========================================================
-        */
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, Timestamp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
         const firebaseConfig = {
-
             apiKey: "AIzaSyDVZA1JYwYEHGt5L1fJbHGuizKtAoAZP6A",
-
             authDomain: "fastfile-2ceff.firebaseapp.com",
-
             projectId: "fastfile-2ceff",
-
             storageBucket: "fastfile-2ceff.firebasestorage.app",
-
             messagingSenderId: "75987316204",
-
             appId: "1:75987316204:web:6b25fbf8c55ca2ac79e4c9"
-
         };
 
-
-        /*
-        ==========================================================
-        INITIALIZE FIREBASE
-        ==========================================================
-        */
-
         const app = initializeApp(firebaseConfig);
-
         const db = getFirestore(app);
 
-
-        /*
-        ==========================================================
-        SETTINGS
-        ==========================================================
-        */
-
-        const EXPIRATION_MS =
-            24 * 60 * 60 * 1000;
-
-
-        /*
-        Keep each document below Firestore's 1 MiB limit.
-        900,000 bytes gives us some safety room.
-        */
-
-        const MAX_FILE_BYTES =
-            900000;
-
-
-        /*
-        ==========================================================
-        STATE
-        ==========================================================
-        */
+        const EXPIRATION_MS = 24 * 60 * 60 * 1000;
+        const MAX_FILE_BYTES = 900000;
 
         let selectedFiles = [];
 
+        // DOM Elements
+        const dropZone = document.getElementById("drop-zone");
+        const fileInput = document.getElementById("file-input");
+        const uploadBtn = document.getElementById("upload-btn");
+        const uploadView = document.getElementById("upload-view");
+        const downloadView = document.getElementById("download-view");
+        const uploadLoading = document.getElementById("upload-loading");
+        const uploadSuccess = document.getElementById("upload-success");
+        const progressText = document.getElementById("upload-progress-text");
+        const fileCountDisplay = document.getElementById("file-count-display");
+        const secretKeyDisplay = document.getElementById("secret-key-display");
+        const uploadTimeDisplay = document.getElementById("upload-time-display");
+        
+        const searchKey = document.getElementById("search-key");
+        const searchBtn = document.getElementById("search-btn");
+        const downloadLoading = document.getElementById("download-loading");
+        const downloadResults = document.getElementById("download-results");
+        const noResults = document.getElementById("no-results");
+        const noResultsTitle = document.getElementById("no-results-title");
+        const noResultsDesc = document.getElementById("no-results-desc");
+        const fileList = document.getElementById("file-list");
 
-        /*
-        ==========================================================
-        DOM
-        ==========================================================
-        */
+        // UI Toast Notification Helper
+        function showToast(message, type = 'info') {
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const bgClass = type === 'error' ? 'bg-rose-900 text-white border-rose-800' : 
+                           type === 'success' ? 'bg-emerald-900 text-white border-emerald-800' : 
+                           'bg-slate-900 text-white border-slate-800';
 
-        const dropZone =
-            document.getElementById("drop-zone");
-
-
-        const fileInput =
-            document.getElementById("file-input");
-
-
-        const uploadBtn =
-            document.getElementById("upload-btn");
-
-
-        const uploadView =
-            document.getElementById("upload-view");
-
-
-        const downloadView =
-            document.getElementById("download-view");
-
-
-        const uploadLoading =
-            document.getElementById("upload-loading");
-
-
-        const uploadSuccess =
-            document.getElementById("upload-success");
-
-
-        const progressText =
-            document.getElementById("upload-progress-text");
-
-
-        const fileCountDisplay =
-            document.getElementById("file-count-display");
-
-
-        const secretKeyDisplay =
-            document.getElementById("secret-key-display");
-
-
-        const uploadTimeDisplay =
-            document.getElementById("upload-time-display");
-
-
-        const searchKey =
-            document.getElementById("search-key");
-
-
-        const searchError =
-            document.getElementById("search-error");
-
-
-        const downloadResults =
-            document.getElementById("download-results");
-
-
-        const fileList =
-            document.getElementById("file-list");
-
-
-        /*
-        ==========================================================
-        TAB SWITCHING
-        ==========================================================
-        */
-
-        document
-            .getElementById("tab-upload-btn")
-            .addEventListener("click", () => {
-
-                switchTab("upload");
-
+            toast.className = `pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-xl shadow-xl text-xs font-semibold border ${bgClass} transition-all duration-300 transform translate-y-2 opacity-0`;
+            toast.innerHTML = `<span>${escapeHtml(message)}</span>`;
+            
+            toastContainer.appendChild(toast);
+            
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
             });
 
+            setTimeout(() => {
+                toast.classList.add('opacity-0', '-translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
 
-        document
-            .getElementById("tab-download-btn")
-            .addEventListener("click", () => {
-
-                switchTab("download");
-
-            });
-
+        // Tab Switching Logic
+        document.getElementById("tab-upload-btn").addEventListener("click", () => switchTab("upload"));
+        document.getElementById("tab-download-btn").addEventListener("click", () => switchTab("download"));
 
         function switchTab(tab) {
-
-            const uploadTab =
-                document.getElementById("tab-upload-btn");
-
-
-            const downloadTab =
-                document.getElementById("tab-download-btn");
-
+            const uploadTab = document.getElementById("tab-upload-btn");
+            const downloadTab = document.getElementById("tab-download-btn");
 
             if (tab === "upload") {
-
                 uploadView.classList.remove("hidden");
-
                 downloadView.classList.add("hidden");
-
-
-                uploadTab.className =
-                    "text-blue-600 border-b-2 border-blue-600 px-3 py-2 text-sm font-medium";
-
-
-                downloadTab.className =
-                    "text-gray-500 hover:text-gray-700 px-3 py-2 text-sm font-medium";
-
+                uploadTab.className = "px-4 py-1.5 text-sm font-semibold rounded-lg bg-white text-blue-600 shadow-sm transition-all duration-200";
+                downloadTab.className = "px-4 py-1.5 text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition-all duration-200";
             } else {
-
                 uploadView.classList.add("hidden");
-
                 downloadView.classList.remove("hidden");
-
-
-                uploadTab.className =
-                    "text-gray-500 hover:text-gray-700 px-3 py-2 text-sm font-medium";
-
-
-                downloadTab.className =
-                    "text-blue-600 border-b-2 border-blue-600 px-3 py-2 text-sm font-medium";
-
+                downloadTab.className = "px-4 py-1.5 text-sm font-semibold rounded-lg bg-white text-blue-600 shadow-sm transition-all duration-200";
+                uploadTab.className = "px-4 py-1.5 text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition-all duration-200";
             }
-
         }
 
+        // File Selection Handlers
+        dropZone.addEventListener("click", () => fileInput.click());
+        fileInput.addEventListener("change", e => handleFiles(e.target.files));
 
-        /*
-        ==========================================================
-        FILE PICKER
-        ==========================================================
-        */
+        dropZone.addEventListener("dragover", e => {
+            e.preventDefault();
+            dropZone.classList.add("dropzone-active");
+        });
 
-        dropZone.addEventListener(
-            "click",
-            () => fileInput.click()
-        );
-
-
-        fileInput.addEventListener(
-            "change",
-            event => {
-
-                handleFiles(event.target.files);
-
-            }
-        );
-
-
-        /*
-        ==========================================================
-        DRAG & DROP
-        ==========================================================
-        */
-
-        dropZone.addEventListener(
-            "dragover",
-            event => {
-
-                event.preventDefault();
-
-                dropZone.classList.add("bg-blue-50");
-
-            }
-        );
-
-
-        dropZone.addEventListener(
-            "dragleave",
-            () => {
-
-                dropZone.classList.remove("bg-blue-50");
-
-            }
-        );
-
-
-        dropZone.addEventListener(
-            "drop",
-            event => {
-
-                event.preventDefault();
-
-                dropZone.classList.remove("bg-blue-50");
-
-                handleFiles(event.dataTransfer.files);
-
-            }
-        );
-
-
-        /*
-        ==========================================================
-        HANDLE FILES
-        ==========================================================
-        */
+        dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dropzone-active"));
+        dropZone.addEventListener("drop", e => {
+            e.preventDefault();
+            dropZone.classList.remove("dropzone-active");
+            handleFiles(e.dataTransfer.files);
+        });
 
         function handleFiles(files) {
+            const incoming = Array.from(files);
+            if (incoming.length === 0) return;
 
-            const incoming =
-                Array.from(files);
-
-
-            if (incoming.length === 0) {
-
-                return;
-
-            }
-
-
-            /*
-            Only allow TXT files.
-            */
-
-            const invalid =
-                incoming.find(file => {
-
-                    return (
-                        file.type !== "text/plain" &&
-                        !file.name.toLowerCase().endsWith(".txt")
-                    );
-
-                });
-
-
+            const invalid = incoming.find(file => file.type !== "text/plain" && !file.name.toLowerCase().endsWith(".txt"));
             if (invalid) {
-
-                alert(
-                    `"${invalid.name}" is not a TXT file.\n\nFastFile currently accepts TXT files only.`
-                );
-
+                showToast(`"${invalid.name}" is not a TXT file. FastFile accepts plain text files only.`, 'error');
                 return;
-
             }
 
-
-            /*
-            Check size before upload.
-            */
-
-            const tooLarge =
-                incoming.find(
-                    file => file.size > MAX_FILE_BYTES
-                );
-
-
+            const tooLarge = incoming.find(file => file.size > MAX_FILE_BYTES);
             if (tooLarge) {
-
-                alert(
-                    `"${tooLarge.name}" is too large.\n\nMaximum size is 900 KB per TXT file.`
-                );
-
+                showToast(`"${tooLarge.name}" exceeds the 900 KB size limit.`, 'error');
                 return;
-
             }
 
-
-            selectedFiles =
-                incoming;
-
-
-            fileCountDisplay.innerText =
-                `${selectedFiles.length} TXT file(s) selected`;
-
-
-            uploadBtn.classList.remove(
-                "hidden"
-            );
-
+            selectedFiles = incoming;
+            fileCountDisplay.innerText = `${selectedFiles.length} file(s) selected (${formatBytes(selectedFiles.reduce((a, b) => a + b.size, 0))})`;
+            uploadBtn.classList.remove("hidden");
         }
 
-
-        /*
-        ==========================================================
-        GENERATE SECURE SECRET KEY
-        ==========================================================
-        */
-
+        // Generate Secret Key
         function generateSecretKey() {
-
-            const characters =
-                "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-
-            const randomValues =
-                new Uint32Array(6);
-
-
-            crypto.getRandomValues(
-                randomValues
-            );
-
-
+            const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            const randomValues = new Uint32Array(6);
+            crypto.getRandomValues(randomValues);
             let key = "";
-
-
             for (let i = 0; i < 6; i++) {
-
-                key +=
-                    characters[
-                        randomValues[i] %
-                        characters.length
-                    ];
-
+                key += characters[randomValues[i] % characters.length];
             }
-
-
             return key;
-
         }
-
-
-        /*
-        ==========================================================
-        GET UNIQUE KEY
-        ==========================================================
-        */
 
         async function generateUniqueSecretKey() {
-
             for (let attempt = 0; attempt < 10; attempt++) {
-
-                const key =
-                    generateSecretKey();
-
-
-                const existing =
-                    await getDoc(
-                        doc(
-                            db,
-                            "shared_files",
-                            key
-                        )
-                    );
-
-
-                if (!existing.exists()) {
-
-                    return key;
-
-                }
-
+                const key = generateSecretKey();
+                const existing = await getDoc(doc(db, "shared_files", key));
+                if (!existing.exists()) return key;
             }
-
-
-            throw new Error(
-                "Could not generate a unique secret key. Please try again."
-            );
-
+            throw new Error("Could not generate a unique secret key. Try again.");
         }
 
-
-        /*
-        ==========================================================
-        UPLOAD / SAVE TXT FILES
-        ==========================================================
-        */
-
-        uploadBtn.addEventListener(
-            "click",
-            async () => {
-
-                if (
-                    selectedFiles.length === 0
-                ) {
-
-                    return;
-
-                }
-
-
-                uploadBtn.classList.add(
-                    "hidden"
-                );
-
-
-                dropZone.classList.add(
-                    "hidden"
-                );
-
-
-                uploadLoading.classList.remove(
-                    "hidden"
-                );
-
-
-                try {
-
-                    /*
-                    Generate unique key.
-                    */
-
-                    progressText.innerText =
-                        "Generating secret key...";
-
-
-                    const secretKey =
-                        await generateUniqueSecretKey();
-
-
-                    const now =
-                        Date.now();
-
-
-                    const expiresAt =
-                        now +
-                        EXPIRATION_MS;
-
-
-                    /*
-                    Create parent document.
-                    */
-
-                    await setDoc(
-                        doc(
-                            db,
-                            "shared_files",
-                            secretKey
-                        ),
-                        {
-
-                            secretKey:
-
-                                secretKey,
-
-                            createdAt:
-
-                                Timestamp.fromMillis(
-                                    now
-                                ),
-
-                            expiresAt:
-
-                                Timestamp.fromMillis(
-                                    expiresAt
-                                ),
-
-                            fileCount:
-
-                                selectedFiles.length
-
-                        }
-                    );
-
-
-                    /*
-                    Save each TXT file
-                    into its own document.
-                    */
-
-                    for (
-                        let i = 0;
-                        i < selectedFiles.length;
-                        i++
-                    ) {
-
-                        const file =
-                            selectedFiles[i];
-
-
-                        progressText.innerText =
-                            `Saving ${i + 1} of ${selectedFiles.length}: ${file.name}`;
-
-
-                        /*
-                        Read TXT content.
-                        */
-
-                        const content =
-                            await file.text();
-
-
-                        /*
-                        Check actual UTF-8 size.
-                        */
-
-                        const byteSize =
-                            new TextEncoder()
-                                .encode(content)
-                                .length;
-
-
-                        if (
-                            byteSize >
-                            MAX_FILE_BYTES
-                        ) {
-
-                            throw new Error(
-                                `"${file.name}" is too large after UTF-8 encoding.`
-                            );
-
-                        }
-
-
-                        /*
-                        Generate a document ID.
-                        */
-
-                        const fileId =
-                            crypto.randomUUID();
-
-
-                        /*
-                        Save TXT content.
-                        */
-
-                        await setDoc(
-                            doc(
-                                db,
-                                "shared_files",
-                                secretKey,
-                                "files",
-                                fileId
-                            ),
-                            {
-
-                                name:
-                                    file.name,
-
-                                size:
-                                    byteSize,
-
-                                content:
-                                    content,
-
-                                createdAt:
-                                    Timestamp.fromMillis(
-                                        now
-                                    ),
-
-                                expiresAt:
-                                    Timestamp.fromMillis(
-                                        expiresAt
-                                    )
-
-                            }
-                        );
-
-                    }
-
-
-                    /*
-                    SUCCESS
-                    */
-
-                    uploadLoading.classList.add(
-                        "hidden"
-                    );
-
-
-                    uploadSuccess.classList.remove(
-                        "hidden"
-                    );
-
-
-                    secretKeyDisplay.innerText =
-                        secretKey;
-
-
-                    uploadTimeDisplay.innerText =
-                        `Created: ${new Date(now).toLocaleString()}`;
-
-                }
-
-                catch (error) {
-
-                    console.error(
-                        "Firestore error:",
-                        error
-                    );
-
-
-                    uploadLoading.classList.add(
-                        "hidden"
-                    );
-
-
-                    alert(
-                        "Could not save the TXT file.\n\n" +
-                        error.message
-                    );
-
-
-                    resetUpload();
-
-                }
-
-            }
-        );
-
-
-        /*
-        ==========================================================
-        COPY KEY
-        ==========================================================
-        */
-
-        document
-            .getElementById("copy-key-btn")
-            .addEventListener(
-                "click",
-                async () => {
-
-                    const key =
-                        secretKeyDisplay.innerText;
-
-
-                    try {
-
-                        await navigator
-                            .clipboard
-                            .writeText(key);
-
-
-                        alert(
-                            `Secret Key ${key} copied!`
-                        );
-
-                    }
-
-                    catch (error) {
-
-                        console.error(error);
-
-                    }
-
-                }
-            );
-
-
-        /*
-        ==========================================================
-        RESET
-        ==========================================================
-        */
-
-        document
-            .getElementById("reset-upload-btn")
-            .addEventListener(
-                "click",
-                resetUpload
-            );
-
-
-        function resetUpload() {
-
-            selectedFiles = [];
-
-
-            fileInput.value = "";
-
-
-            fileCountDisplay.innerText =
-                "TXT files only. Maximum 900 KB per file.";
-
-
-            uploadSuccess.classList.add(
-                "hidden"
-            );
-
-
-            uploadLoading.classList.add(
-                "hidden"
-            );
-
-
-            dropZone.classList.remove(
-                "hidden"
-            );
-
-
-            uploadBtn.classList.add(
-                "hidden"
-            );
-
-        }
-
-
-        /*
-        ==========================================================
-        SEARCH
-        ==========================================================
-        */
-
-        document
-            .getElementById("search-btn")
-            .addEventListener(
-                "click",
-                searchFiles
-            );
-
-
-        searchKey.addEventListener(
-            "keydown",
-            event => {
-
-                if (
-                    event.key === "Enter"
-                ) {
-
-                    searchFiles();
-
-                }
-
-            }
-        );
-
-
-        /*
-        ==========================================================
-        FIND FILES
-        ==========================================================
-        */
-
-        async function searchFiles() {
-
-            const key =
-                searchKey.value
-                    .trim()
-                    .toUpperCase();
-
-
-            searchError.classList.add(
-                "hidden"
-            );
-
-
-            downloadResults.classList.add(
-                "hidden"
-            );
-
-
-            fileList.innerHTML = "";
-
-
-            if (
-                !/^[A-Z0-9]{6}$/.test(key)
-            ) {
-
-                showSearchError(
-                    "Enter a valid 6-character secret key."
-                );
-
-                return;
-
-            }
-
+        // Upload Process
+        uploadBtn.addEventListener("click", async () => {
+            if (selectedFiles.length === 0) return;
+
+            uploadBtn.classList.add("hidden");
+            dropZone.classList.add("hidden");
+            uploadLoading.classList.remove("hidden");
 
             try {
+                progressText.innerText = "Generating secret key...";
+                const secretKey = await generateUniqueSecretKey();
+                const now = Date.now();
+                const expiresAt = now + EXPIRATION_MS;
 
-                /*
-                Get parent document.
-                */
+                await setDoc(doc(db, "shared_files", secretKey), {
+                    secretKey: secretKey,
+                    createdAt: Timestamp.fromMillis(now),
+                    expiresAt: Timestamp.fromMillis(expiresAt),
+                    fileCount: selectedFiles.length
+                });
 
-                const parentRef =
-                    doc(
-                        db,
-                        "shared_files",
-                        key
-                    );
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    const file = selectedFiles[i];
+                    progressText.innerText = `Saving (${i + 1}/${selectedFiles.length}): ${file.name}`;
+                    const content = await file.text();
+                    const byteSize = new TextEncoder().encode(content).length;
 
-
-                const parentSnap =
-                    await getDoc(
-                        parentRef
-                    );
-
-
-                if (
-                    !parentSnap.exists()
-                ) {
-
-                    showSearchError(
-                        "Invalid key. No files were found."
-                    );
-
-                    return;
-
-                }
-
-
-                const parentData =
-                    parentSnap.data();
-
-
-                /*
-                Check expiration.
-                */
-
-                if (
-                    !parentData.expiresAt
-                ) {
-
-                    showSearchError(
-                        "Invalid file record."
-                    );
-
-                    return;
-
-                }
-
-
-                if (
-                    Date.now() >
-                    parentData.expiresAt.toMillis()
-                ) {
-
-                    showSearchError(
-                        "This secret key has expired."
-                    );
-
-                    return;
-
-                }
-
-
-                /*
-                Get all TXT file documents.
-                */
-
-                const filesRef =
-                    collection(
-                        db,
-                        "shared_files",
-                        key,
-                        "files"
-                    );
-
-
-                const filesSnapshot =
-                    await getDocs(
-                        filesRef
-                    );
-
-
-                if (
-                    filesSnapshot.empty
-                ) {
-
-                    showSearchError(
-                        "No TXT files were found."
-                    );
-
-                    return;
-
-                }
-
-
-                /*
-                Display files.
-                */
-
-                filesSnapshot.forEach(
-                    fileDoc => {
-
-                        const file =
-                            fileDoc.data();
-
-
-                        createFileItem(
-                            file
-                        );
-
+                    if (byteSize > MAX_FILE_BYTES) {
+                        throw new Error(`"${file.name}" exceeds maximum allowed UTF-8 size.`);
                     }
-                );
 
+                    const fileId = crypto.randomUUID();
+                    await setDoc(doc(db, "shared_files", secretKey, "files", fileId), {
+                        name: file.name,
+                        size: byteSize,
+                        content: content,
+                        createdAt: Timestamp.fromMillis(now),
+                        expiresAt: Timestamp.fromMillis(expiresAt)
+                    });
+                }
 
-                downloadResults.classList.remove(
-                    "hidden"
-                );
+                uploadLoading.classList.add("hidden");
+                uploadSuccess.classList.remove("hidden");
+                secretKeyDisplay.innerText = secretKey;
+                uploadTimeDisplay.innerText = `Created at ${new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                showToast("Files stored successfully!", "success");
 
+            } catch (error) {
+                console.error("Firestore error:", error);
+                uploadLoading.classList.add("hidden");
+                showToast(error.message || "Could not save the TXT file.", "error");
+                resetUpload();
             }
+        });
 
-            catch (error) {
-
-                console.error(
-                    "Search error:",
-                    error
-                );
-
-
-                showSearchError(
-                    "Could not retrieve the files. Check your Firestore rules."
-                );
-
+        // Copy Secret Key
+        document.getElementById("copy-key-btn").addEventListener("click", async () => {
+            const key = secretKeyDisplay.innerText;
+            try {
+                await navigator.clipboard.writeText(key);
+                showToast(`Secret Key ${key} copied to clipboard!`, 'success');
+            } catch (error) {
+                showToast("Failed to copy key.", 'error');
             }
+        });
 
+        document.getElementById("reset-upload-btn").addEventListener("click", resetUpload);
+
+        function resetUpload() {
+            selectedFiles = [];
+            fileInput.value = "";
+            fileCountDisplay.innerText = "TXT files only (Max 900 KB per file)";
+            uploadSuccess.classList.add("hidden");
+            uploadLoading.classList.add("hidden");
+            dropZone.classList.remove("hidden");
+            uploadBtn.classList.add("hidden");
         }
 
-
-        /*
-        ==========================================================
-        CREATE DOWNLOAD ITEM
-        ==========================================================
-        */
-
-        function createFileItem(file) {
-
-            const li =
-                document.createElement("li");
-
-
-            li.className =
-                "bg-gray-50 p-4 rounded border border-gray-200";
-
-
-            /*
-            File name
-            */
-
-            const name =
-                document.createElement("div");
-
-
-            name.className =
-                "font-semibold text-sm text-gray-800 truncate";
-
-
-            name.textContent =
-                file.name;
-
-
-            /*
-            File size
-            */
-
-            const size =
-                document.createElement("div");
-
-
-            size.className =
-                "text-xs text-gray-500 mt-1";
-
-
-            size.textContent =
-                formatBytes(file.size);
-
-
-            /*
-            Buttons container
-            */
-
-            const buttons =
-                document.createElement("div");
-
-
-            buttons.className =
-                "flex gap-2 mt-3";
-
-
-            /*
-            View button
-            */
-
-            const viewButton =
-                document.createElement("button");
-
-
-            viewButton.className =
-                "flex-1 bg-gray-700 hover:bg-gray-800 text-white px-3 py-2 text-xs font-semibold rounded";
-
-
-            viewButton.textContent =
-                "View";
-
-
-            viewButton.addEventListener(
-                "click",
-                () => {
-
-                    viewTextFile(
-                        file
-                    );
-
-                }
-            );
-
-
-            /*
-            Download button
-            */
-
-            const downloadButton =
-                document.createElement("button");
-
-
-            downloadButton.className =
-                "flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-xs font-semibold rounded";
-
-
-            downloadButton.textContent =
-                "Download";
-
-
-            downloadButton.addEventListener(
-                "click",
-                () => {
-
-                    downloadTextFile(
-                        file
-                    );
-
-                }
-            );
-
-
-            buttons.appendChild(
-                viewButton
-            );
-
-
-            buttons.appendChild(
-                downloadButton
-            );
-
-
-            li.appendChild(
-                name
-            );
-
-
-            li.appendChild(
-                size
-            );
-
-
-            li.appendChild(
-                buttons
-            );
-
-
-            fileList.appendChild(
-                li
-            );
-
-        }
-
-
-        /*
-        ==========================================================
-        VIEW TXT
-        ==========================================================
-        */
-
-        function viewTextFile(file) {
-
-            const viewer =
-                window.open(
-                    "",
-                    "_blank"
-                );
-
-
-            if (!viewer) {
-
-                alert(
-                    "Please allow popups to view the file."
-                );
-
+        // Search Action
+        searchBtn.addEventListener("click", searchFiles);
+        searchKey.addEventListener("keydown", e => { if (e.key === "Enter") searchFiles(); });
+
+        async function searchFiles() {
+            const key = searchKey.value.trim().toUpperCase();
+
+            // Reset UI states
+            noResults.classList.add("hidden");
+            downloadResults.classList.add("hidden");
+            fileList.innerHTML = "";
+
+            if (!/^[A-Z0-9]{6}$/.test(key)) {
+                showNoResultsUI("Invalid Secret Key Format", "Please enter a valid 6-character alphanumeric key.");
                 return;
-
             }
 
+            downloadLoading.classList.remove("hidden");
 
-            viewer.document.title =
-                file.name;
+            try {
+                const parentRef = doc(db, "shared_files", key);
+                const parentSnap = await getDoc(parentRef);
 
+                if (!parentSnap.exists()) {
+                    downloadLoading.classList.add("hidden");
+                    showNoResultsUI("No Files Found", "No files match the secret key provided. Please verify the key.");
+                    return;
+                }
 
-            const escaped =
-                escapeHtml(
-                    file.content
-                );
+                const parentData = parentSnap.data();
 
+                if (!parentData.expiresAt || Date.now() > parentData.expiresAt.toMillis()) {
+                    downloadLoading.classList.add("hidden");
+                    showNoResultsUI("Key Expired", "This secret key has expired after 24 hours.");
+                    return;
+                }
 
-            viewer.document.body.style =
-                "margin:0;background:#111827;color:#f9fafb;font-family:monospace;";
+                const filesRef = collection(db, "shared_files", key, "files");
+                const filesSnapshot = await getDocs(filesRef);
 
+                downloadLoading.classList.add("hidden");
 
-            viewer.document.body.innerHTML =
-                `
-                    <div style="padding:20px;max-width:1000px;margin:auto;">
-                        <h2 style="font-family:sans-serif;margin-bottom:15px;">
-                            ${escapeHtml(file.name)}
-                        </h2>
+                if (filesSnapshot.empty) {
+                    showNoResultsUI("Empty File Collection", "No readable files were found associated with this key.");
+                    return;
+                }
 
-                        <pre style="
-                            white-space:pre-wrap;
-                            word-break:break-word;
-                            background:#1f2937;
-                            padding:20px;
-                            border-radius:8px;
-                            overflow:auto;
-                        ">${escaped}</pre>
-                    </div>
-                `;
+                filesSnapshot.forEach(fileDoc => {
+                    createFileItem(fileDoc.data());
+                });
 
+                downloadResults.classList.remove("hidden");
+
+            } catch (error) {
+                console.error("Search error:", error);
+                downloadLoading.classList.add("hidden");
+                showNoResultsUI("Connection Error", "Could not retrieve the requested files. Check your database permissions.");
+            }
         }
 
+        function showNoResultsUI(title, description) {
+            noResultsTitle.textContent = title;
+            noResultsDesc.textContent = description;
+            noResults.classList.remove("hidden");
+        }
 
-        /*
-        ==========================================================
-        DOWNLOAD TXT
-        ==========================================================
-        */
+        // Render File Download Cards
+        function createFileItem(file) {
+            const li = document.createElement("li");
+            li.className = "bg-slate-50 p-4 rounded-xl border border-slate-200/80 flex items-center justify-between gap-4 hover:border-slate-300 transition-all";
 
+            li.innerHTML = `
+                <div class="min-w-0 flex-1">
+                    <p class="font-semibold text-xs text-slate-800 truncate">${escapeHtml(file.name)}</p>
+                    <p class="text-[11px] text-slate-400 font-medium mt-0.5">${formatBytes(file.size)}</p>
+                </div>
+                <div class="flex items-center space-x-2 shrink-0">
+                    <button class="view-btn bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">
+                        View
+                    </button>
+                    <button class="dl-btn bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-colors">
+                        Download
+                    </button>
+                </div>
+            `;
+
+            li.querySelector(".view-btn").addEventListener("click", () => viewTextFile(file));
+            li.querySelector(".dl-btn").addEventListener("click", () => downloadTextFile(file));
+
+            fileList.appendChild(li);
+        }
+
+        // View File in New Tab
+        function viewTextFile(file) {
+            const viewer = window.open("", "_blank");
+            if (!viewer) {
+                showToast("Popup blocked! Allow popups to preview text.", "error");
+                return;
+            }
+
+            viewer.document.title = file.name;
+            const escaped = escapeHtml(file.content);
+            viewer.document.body.style = "margin:0;background:#0f172a;color:#f8fafc;font-family:monospace;";
+            viewer.document.body.innerHTML = `
+                <div style="padding:24px;max-width:900px;margin:auto;">
+                    <h2 style="font-family:sans-serif;margin-bottom:16px;color:#93c5fd;">${escapeHtml(file.name)}</h2>
+                    <pre style="white-space:pre-wrap;word-break:break-word;background:#1e293b;padding:20px;border-radius:12px;border:1px solid #334155;">${escaped}</pre>
+                </div>
+            `;
+        }
+
+        // Download File Locally
         function downloadTextFile(file) {
-
-            const blob =
-                new Blob(
-                    [file.content],
-                    {
-                        type:
-                            "text/plain;charset=utf-8"
-                    }
-                );
-
-
-            const url =
-                URL.createObjectURL(
-                    blob
-                );
-
-
-            const link =
-                document.createElement("a");
-
-
-            link.href =
-                url;
-
-
-            link.download =
-                file.name ||
-                "fastfile.txt";
-
-
-            document.body.appendChild(
-                link
-            );
-
-
+            const blob = new Blob([file.content], { type: "text/plain;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = file.name || "fastfile.txt";
+            document.body.appendChild(link);
             link.click();
-
-
             link.remove();
-
-
-            URL.revokeObjectURL(
-                url
-            );
-
+            URL.revokeObjectURL(url);
+            showToast(`Downloading ${file.name}...`, 'success');
         }
-
-
-        /*
-        ==========================================================
-        ESCAPE HTML
-        ==========================================================
-        */
 
         function escapeHtml(value) {
-
             return String(value)
-                .replace(
-                    /&/g,
-                    "&amp;"
-                )
-                .replace(
-                    /</g,
-                    "&lt;"
-                )
-                .replace(
-                    />/g,
-                    "&gt;"
-                )
-                .replace(
-                    /"/g,
-                    "&quot;"
-                )
-                .replace(
-                    /'/g,
-                    "&#039;"
-                );
-
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
-
-
-        /*
-        ==========================================================
-        FORMAT SIZE
-        ==========================================================
-        */
 
         function formatBytes(bytes) {
-
-            if (
-                !bytes ||
-                bytes === 0
-            ) {
-
-                return "0 Bytes";
-
-            }
-
-
-            const units =
-                [
-                    "Bytes",
-                    "KB",
-                    "MB"
-                ];
-
-
-            const index =
-                Math.floor(
-                    Math.log(bytes) /
-                    Math.log(1024)
-                );
-
-
-            return (
-                parseFloat(
-                    (
-                        bytes /
-                        Math.pow(
-                            1024,
-                            index
-                        )
-                    ).toFixed(2)
-                ) +
-                " " +
-                units[index]
-            );
-
+            if (!bytes || bytes === 0) return "0 Bytes";
+            const units = ["Bytes", "KB", "MB"];
+            const index = Math.floor(Math.log(bytes) / Math.log(1024));
+            return parseFloat((bytes / Math.pow(1024, index)).toFixed(2)) + " " + units[index];
         }
-
-
-        /*
-        ==========================================================
-        READY
-        ==========================================================
-        */
-
-        console.log(
-            "FastFile initialized."
-        );
-
-        console.log(
-            "Firebase project:",
-            firebaseConfig.projectId
-        );
-
     </script>
-
 </body>
 </html>
