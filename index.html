@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>FastFile - File Sharing</title>
+    <title>FastFile - TXT Sharing</title>
 
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
@@ -32,6 +31,7 @@
     <!-- NAVBAR -->
     <nav class="bg-white border-b border-gray-200">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+
             <div class="flex justify-between h-16">
 
                 <div class="flex items-center">
@@ -41,6 +41,7 @@
                 </div>
 
                 <div class="flex space-x-4 items-center">
+
                     <button
                         id="tab-upload-btn"
                         class="text-blue-600 border-b-2 border-blue-600 px-3 py-2 text-sm font-medium">
@@ -52,9 +53,11 @@
                         class="text-gray-500 hover:text-gray-700 px-3 py-2 text-sm font-medium">
                         Download
                     </button>
+
                 </div>
 
             </div>
+
         </div>
     </nav>
 
@@ -71,9 +74,13 @@
 
             <div id="upload-view">
 
-                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">
-                    Upload Files
+                <h2 class="text-2xl font-bold mb-2 text-center text-gray-800">
+                    Send TXT Files
                 </h2>
+
+                <p class="text-sm text-gray-500 text-center mb-6">
+                    Share text files with a temporary secret key.
+                </p>
 
 
                 <!-- DROP ZONE -->
@@ -86,7 +93,9 @@
                         type="file"
                         id="file-input"
                         multiple
+                        accept=".txt,text/plain"
                         class="hidden">
+
 
                     <svg
                         class="mx-auto h-12 w-12 text-gray-400 mb-3"
@@ -98,19 +107,21 @@
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
-                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
 
                     </svg>
+
 
                     <p class="text-gray-600 mb-1">
                         Click to browse or drag & drop
                     </p>
 
+
                     <p
                         class="text-xs text-gray-400"
                         id="file-count-display">
 
-                        Multiple files supported. 24h expiration.
+                        TXT files only. Maximum 900 KB per file.
 
                     </p>
 
@@ -123,7 +134,7 @@
                     id="upload-btn"
                     class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors hidden">
 
-                    Start Cloud Upload
+                    Save TXT Files
 
                 </button>
 
@@ -138,11 +149,12 @@
                         class="loader rounded-full border-4 border-gray-200 h-10 w-10 mb-3">
                     </div>
 
+
                     <p
                         id="upload-progress-text"
-                        class="text-sm text-gray-600 font-medium">
+                        class="text-sm text-gray-600 font-medium text-center">
 
-                        Uploading to Firebase...
+                        Saving to Firestore...
 
                     </p>
 
@@ -164,19 +176,19 @@
 
                             <path
                                 fill-rule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 001.414 0l4-4z"
                                 clip-rule="evenodd">
                             </path>
 
                         </svg>
 
-                        Upload Successful!
+                        Files Saved!
 
                     </h3>
 
 
                     <p class="text-xs text-gray-600 mb-4">
-                        Files will automatically expire 24 hours after upload.
+                        Your secret key is valid for 24 hours.
                     </p>
 
 
@@ -191,11 +203,12 @@
 
                         </span>
 
+
                         <button
                             id="copy-key-btn"
                             class="text-blue-600 hover:text-blue-800 text-sm font-semibold">
 
-                            Copy Secret Key
+                            Copy Key
 
                         </button>
 
@@ -212,7 +225,7 @@
                         id="reset-upload-btn"
                         class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded">
 
-                        Upload Another File
+                        Send Another
 
                     </button>
 
@@ -227,9 +240,13 @@
 
             <div id="download-view" class="hidden">
 
-                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">
-                    Download Files
+                <h2 class="text-2xl font-bold mb-2 text-center text-gray-800">
+                    Receive TXT Files
                 </h2>
+
+                <p class="text-sm text-gray-500 text-center mb-6">
+                    Enter the secret key you received.
+                </p>
 
 
                 <div class="mb-6">
@@ -237,7 +254,7 @@
                     <label
                         class="block text-sm font-medium text-gray-700 mb-2">
 
-                        Enter Secret Key
+                        Secret Key
 
                     </label>
 
@@ -272,15 +289,20 @@
                 </div>
 
 
-                <div id="download-results" class="hidden">
+                <!-- RESULTS -->
+
+                <div
+                    id="download-results"
+                    class="hidden">
 
                     <h3 class="font-bold text-gray-800 mb-3 border-b pb-2">
-                        Available Files
+                        Available TXT Files
                     </h3>
+
 
                     <ul
                         id="file-list"
-                        class="space-y-3 mb-4 max-h-60 overflow-y-auto pr-2">
+                        class="space-y-3 mb-4 max-h-80 overflow-y-auto pr-2">
                     </ul>
 
                 </div>
@@ -304,12 +326,7 @@
             </p>
 
             <p class="text-sm text-gray-500 mt-2 md:mt-0 font-medium">
-
-                Created by
-                <span class="text-gray-800 font-bold">
-                    Arjunren Von
-                </span>
-
+                FastFile
             </p>
 
         </div>
@@ -325,7 +342,7 @@
 
         /*
         ==========================================================
-        FIREBASE IMPORTS
+        FIREBASE
         ==========================================================
         */
 
@@ -335,25 +352,19 @@
 
 
         import {
-            getStorage,
-            ref,
-            uploadBytesResumable,
-            getDownloadURL
-        } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-storage.js";
-
-
-        import {
             getFirestore,
             doc,
             setDoc,
             getDoc,
+            collection,
+            getDocs,
             Timestamp
         } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
 
         /*
         ==========================================================
-        FIREBASE CONFIGURATION
+        FIREBASE CONFIG
         ==========================================================
         */
 
@@ -382,66 +393,98 @@
 
         const app = initializeApp(firebaseConfig);
 
-        const storage = getStorage(app);
-
         const db = getFirestore(app);
 
 
         /*
         ==========================================================
-        APPLICATION STATE
+        SETTINGS
+        ==========================================================
+        */
+
+        const EXPIRATION_MS =
+            24 * 60 * 60 * 1000;
+
+
+        /*
+        Keep each document below Firestore's 1 MiB limit.
+        900,000 bytes gives us some safety room.
+        */
+
+        const MAX_FILE_BYTES =
+            900000;
+
+
+        /*
+        ==========================================================
+        STATE
         ==========================================================
         */
 
         let selectedFiles = [];
 
-        const HOURS_24_MS = 24 * 60 * 60 * 1000;
-
 
         /*
         ==========================================================
-        DOM ELEMENTS
+        DOM
         ==========================================================
         */
 
         const dropZone =
             document.getElementById("drop-zone");
 
+
         const fileInput =
             document.getElementById("file-input");
+
 
         const uploadBtn =
             document.getElementById("upload-btn");
 
+
         const uploadView =
             document.getElementById("upload-view");
+
 
         const downloadView =
             document.getElementById("download-view");
 
+
         const uploadLoading =
             document.getElementById("upload-loading");
 
-        const uploadProgressText =
-            document.getElementById("upload-progress-text");
 
         const uploadSuccess =
             document.getElementById("upload-success");
 
+
+        const progressText =
+            document.getElementById("upload-progress-text");
+
+
+        const fileCountDisplay =
+            document.getElementById("file-count-display");
+
+
         const secretKeyDisplay =
             document.getElementById("secret-key-display");
+
 
         const uploadTimeDisplay =
             document.getElementById("upload-time-display");
 
+
         const searchKey =
             document.getElementById("search-key");
+
 
         const searchError =
             document.getElementById("search-error");
 
+
         const downloadResults =
             document.getElementById("download-results");
+
 
         const fileList =
             document.getElementById("file-list");
@@ -449,7 +492,7 @@
 
         /*
         ==========================================================
-        TAB NAVIGATION
+        TAB SWITCHING
         ==========================================================
         */
 
@@ -475,6 +518,7 @@
 
             const uploadTab =
                 document.getElementById("tab-upload-btn");
+
 
             const downloadTab =
                 document.getElementById("tab-download-btn");
@@ -515,54 +559,128 @@
 
         /*
         ==========================================================
-        FILE SELECTION
+        FILE PICKER
         ==========================================================
         */
 
-        dropZone.addEventListener("click", () => {
-
-            fileInput.click();
-
-        });
-
-
-        fileInput.addEventListener("change", (event) => {
-
-            handleFiles(event.target.files);
-
-        });
+        dropZone.addEventListener(
+            "click",
+            () => fileInput.click()
+        );
 
 
-        dropZone.addEventListener("dragover", (event) => {
+        fileInput.addEventListener(
+            "change",
+            event => {
 
-            event.preventDefault();
+                handleFiles(event.target.files);
 
-            dropZone.classList.add("bg-blue-50");
-
-        });
-
-
-        dropZone.addEventListener("dragleave", () => {
-
-            dropZone.classList.remove("bg-blue-50");
-
-        });
+            }
+        );
 
 
-        dropZone.addEventListener("drop", (event) => {
+        /*
+        ==========================================================
+        DRAG & DROP
+        ==========================================================
+        */
 
-            event.preventDefault();
+        dropZone.addEventListener(
+            "dragover",
+            event => {
 
-            dropZone.classList.remove("bg-blue-50");
+                event.preventDefault();
 
-            handleFiles(event.dataTransfer.files);
+                dropZone.classList.add("bg-blue-50");
 
-        });
+            }
+        );
 
+
+        dropZone.addEventListener(
+            "dragleave",
+            () => {
+
+                dropZone.classList.remove("bg-blue-50");
+
+            }
+        );
+
+
+        dropZone.addEventListener(
+            "drop",
+            event => {
+
+                event.preventDefault();
+
+                dropZone.classList.remove("bg-blue-50");
+
+                handleFiles(event.dataTransfer.files);
+
+            }
+        );
+
+
+        /*
+        ==========================================================
+        HANDLE FILES
+        ==========================================================
+        */
 
         function handleFiles(files) {
 
-            if (!files || files.length === 0) {
+            const incoming =
+                Array.from(files);
+
+
+            if (incoming.length === 0) {
+
+                return;
+
+            }
+
+
+            /*
+            Only allow TXT files.
+            */
+
+            const invalid =
+                incoming.find(file => {
+
+                    return (
+                        file.type !== "text/plain" &&
+                        !file.name.toLowerCase().endsWith(".txt")
+                    );
+
+                });
+
+
+            if (invalid) {
+
+                alert(
+                    `"${invalid.name}" is not a TXT file.\n\nFastFile currently accepts TXT files only.`
+                );
+
+                return;
+
+            }
+
+
+            /*
+            Check size before upload.
+            */
+
+            const tooLarge =
+                incoming.find(
+                    file => file.size > MAX_FILE_BYTES
+                );
+
+
+            if (tooLarge) {
+
+                alert(
+                    `"${tooLarge.name}" is too large.\n\nMaximum size is 900 KB per TXT file.`
+                );
 
                 return;
 
@@ -570,23 +688,23 @@
 
 
             selectedFiles =
-                Array.from(files);
+                incoming;
 
 
-            document
-                .getElementById("file-count-display")
-                .innerText =
-                `${selectedFiles.length} file(s) selected`;
+            fileCountDisplay.innerText =
+                `${selectedFiles.length} TXT file(s) selected`;
 
 
-            uploadBtn.classList.remove("hidden");
+            uploadBtn.classList.remove(
+                "hidden"
+            );
 
         }
 
 
         /*
         ==========================================================
-        GENERATE SECRET KEY
+        GENERATE SECURE SECRET KEY
         ==========================================================
         */
 
@@ -596,19 +714,25 @@
                 "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 
+            const randomValues =
+                new Uint32Array(6);
+
+
+            crypto.getRandomValues(
+                randomValues
+            );
+
+
             let key = "";
 
 
             for (let i = 0; i < 6; i++) {
 
-                const randomIndex =
-                    Math.floor(
-                        Math.random() * characters.length
-                    );
-
-
                 key +=
-                    characters[randomIndex];
+                    characters[
+                        randomValues[i] %
+                        characters.length
+                    ];
 
             }
 
@@ -620,260 +744,325 @@
 
         /*
         ==========================================================
-        UPLOAD FILES
+        GET UNIQUE KEY
         ==========================================================
         */
 
-        uploadBtn.addEventListener("click", async () => {
+        async function generateUniqueSecretKey() {
 
-            if (selectedFiles.length === 0) {
+            for (let attempt = 0; attempt < 10; attempt++) {
 
-                return;
+                const key =
+                    generateSecretKey();
+
+
+                const existing =
+                    await getDoc(
+                        doc(
+                            db,
+                            "shared_files",
+                            key
+                        )
+                    );
+
+
+                if (!existing.exists()) {
+
+                    return key;
+
+                }
 
             }
 
 
-            uploadBtn.classList.add("hidden");
+            throw new Error(
+                "Could not generate a unique secret key. Please try again."
+            );
 
-            dropZone.classList.add("hidden");
-
-            uploadLoading.classList.remove("hidden");
-
-
-            const secretKey =
-                generateSecretKey();
+        }
 
 
-            const now =
-                Date.now();
+        /*
+        ==========================================================
+        UPLOAD / SAVE TXT FILES
+        ==========================================================
+        */
 
+        uploadBtn.addEventListener(
+            "click",
+            async () => {
 
-            const expiresAt =
-                now + HOURS_24_MS;
-
-
-            const uploadedFilesData = [];
-
-
-            try {
-
-                /*
-                ----------------------------------------------
-                UPLOAD EACH FILE
-                ----------------------------------------------
-                */
-
-                for (
-                    let i = 0;
-                    i < selectedFiles.length;
-                    i++
+                if (
+                    selectedFiles.length === 0
                 ) {
 
-                    const file =
-                        selectedFiles[i];
+                    return;
+
+                }
 
 
-                    uploadProgressText.innerText =
-                        `Uploading file ${i + 1} of ${selectedFiles.length}...`;
+                uploadBtn.classList.add(
+                    "hidden"
+                );
+
+
+                dropZone.classList.add(
+                    "hidden"
+                );
+
+
+                uploadLoading.classList.remove(
+                    "hidden"
+                );
+
+
+                try {
+
+                    /*
+                    Generate unique key.
+                    */
+
+                    progressText.innerText =
+                        "Generating secret key...";
+
+
+                    const secretKey =
+                        await generateUniqueSecretKey();
+
+
+                    const now =
+                        Date.now();
+
+
+                    const expiresAt =
+                        now +
+                        EXPIRATION_MS;
 
 
                     /*
-                    Create Firebase Storage path
+                    Create parent document.
                     */
 
-                    const storagePath =
-                        `uploads/${secretKey}/${file.name}`;
+                    await setDoc(
+                        doc(
+                            db,
+                            "shared_files",
+                            secretKey
+                        ),
+                        {
 
+                            secretKey:
 
-                    const storageRef =
-                        ref(storage, storagePath);
+                                secretKey,
 
+                            createdAt:
 
-                    /*
-                    Upload file
-                    */
+                                Timestamp.fromMillis(
+                                    now
+                                ),
 
-                    const uploadTask =
-                        uploadBytesResumable(
-                            storageRef,
-                            file
-                        );
+                            expiresAt:
 
+                                Timestamp.fromMillis(
+                                    expiresAt
+                                ),
 
-                    /*
-                    Wait for upload to finish
-                    */
+                            fileCount:
 
-                    await new Promise(
-                        (resolve, reject) => {
-
-                            uploadTask.on(
-                                "state_changed",
-
-                                (snapshot) => {
-
-                                    const progress =
-                                        (
-                                            snapshot.bytesTransferred /
-                                            snapshot.totalBytes
-                                        ) * 100;
-
-
-                                    uploadProgressText.innerText =
-                                        `Uploading ${i + 1} of ${selectedFiles.length} — ${Math.round(progress)}%`;
-
-                                },
-
-                                (error) => {
-
-                                    reject(error);
-
-                                },
-
-                                () => {
-
-                                    resolve();
-
-                                }
-                            );
+                                selectedFiles.length
 
                         }
                     );
 
 
                     /*
-                    Get download URL
+                    Save each TXT file
+                    into its own document.
                     */
 
-                    const downloadUrl =
-                        await getDownloadURL(
-                            uploadTask.snapshot.ref
+                    for (
+                        let i = 0;
+                        i < selectedFiles.length;
+                        i++
+                    ) {
+
+                        const file =
+                            selectedFiles[i];
+
+
+                        progressText.innerText =
+                            `Saving ${i + 1} of ${selectedFiles.length}: ${file.name}`;
+
+
+                        /*
+                        Read TXT content.
+                        */
+
+                        const content =
+                            await file.text();
+
+
+                        /*
+                        Check actual UTF-8 size.
+                        */
+
+                        const byteSize =
+                            new TextEncoder()
+                                .encode(content)
+                                .length;
+
+
+                        if (
+                            byteSize >
+                            MAX_FILE_BYTES
+                        ) {
+
+                            throw new Error(
+                                `"${file.name}" is too large after UTF-8 encoding.`
+                            );
+
+                        }
+
+
+                        /*
+                        Generate a document ID.
+                        */
+
+                        const fileId =
+                            crypto.randomUUID();
+
+
+                        /*
+                        Save TXT content.
+                        */
+
+                        await setDoc(
+                            doc(
+                                db,
+                                "shared_files",
+                                secretKey,
+                                "files",
+                                fileId
+                            ),
+                            {
+
+                                name:
+                                    file.name,
+
+                                size:
+                                    byteSize,
+
+                                content:
+                                    content,
+
+                                createdAt:
+                                    Timestamp.fromMillis(
+                                        now
+                                    ),
+
+                                expiresAt:
+                                    Timestamp.fromMillis(
+                                        expiresAt
+                                    )
+
+                            }
                         );
 
-
-                    uploadedFilesData.push({
-
-                        name: file.name,
-
-                        size: formatBytes(file.size),
-
-                        url: downloadUrl
-
-                    });
-
-                }
-
-
-                /*
-                ----------------------------------------------
-                SAVE METADATA TO FIRESTORE
-                ----------------------------------------------
-                */
-
-                await setDoc(
-                    doc(
-                        db,
-                        "shared_files",
-                        secretKey
-                    ),
-                    {
-
-                        secretKey: secretKey,
-
-                        createdAt:
-                            Timestamp.fromMillis(now),
-
-                        expiresAt:
-                            Timestamp.fromMillis(expiresAt),
-
-                        files:
-                            uploadedFilesData
-
                     }
-                );
 
 
-                /*
-                ----------------------------------------------
-                SUCCESS
-                ----------------------------------------------
-                */
+                    /*
+                    SUCCESS
+                    */
 
-                uploadLoading.classList.add("hidden");
-
-                uploadSuccess.classList.remove("hidden");
-
-
-                secretKeyDisplay.innerText =
-                    secretKey;
-
-
-                uploadTimeDisplay.innerText =
-                    `Uploaded: ${new Date(now).toLocaleString()}`;
-
-            }
-
-            catch (error) {
-
-                console.error(
-                    "Firebase upload error:",
-                    error
-                );
-
-
-                uploadLoading.classList.add("hidden");
-
-
-                alert(
-                    "Upload failed.\n\n" +
-                    "Error: " +
-                    error.message
-                );
-
-
-                resetUpload();
-
-            }
-
-        });
-
-
-        /*
-        ==========================================================
-        COPY SECRET KEY
-        ==========================================================
-        */
-
-        document
-            .getElementById("copy-key-btn")
-            .addEventListener("click", async () => {
-
-                const key =
-                    secretKeyDisplay.innerText;
-
-
-                try {
-
-                    await navigator.clipboard.writeText(key);
-
-                    alert(
-                        `Secret Key ${key} copied!`
+                    uploadLoading.classList.add(
+                        "hidden"
                     );
+
+
+                    uploadSuccess.classList.remove(
+                        "hidden"
+                    );
+
+
+                    secretKeyDisplay.innerText =
+                        secretKey;
+
+
+                    uploadTimeDisplay.innerText =
+                        `Created: ${new Date(now).toLocaleString()}`;
 
                 }
 
                 catch (error) {
 
-                    console.error(error);
+                    console.error(
+                        "Firestore error:",
+                        error
+                    );
+
+
+                    uploadLoading.classList.add(
+                        "hidden"
+                    );
+
+
+                    alert(
+                        "Could not save the TXT file.\n\n" +
+                        error.message
+                    );
+
+
+                    resetUpload();
 
                 }
 
-            });
+            }
+        );
 
 
         /*
         ==========================================================
-        RESET UPLOAD
+        COPY KEY
+        ==========================================================
+        */
+
+        document
+            .getElementById("copy-key-btn")
+            .addEventListener(
+                "click",
+                async () => {
+
+                    const key =
+                        secretKeyDisplay.innerText;
+
+
+                    try {
+
+                        await navigator
+                            .clipboard
+                            .writeText(key);
+
+
+                        alert(
+                            `Secret Key ${key} copied!`
+                        );
+
+                    }
+
+                    catch (error) {
+
+                        console.error(error);
+
+                    }
+
+                }
+            );
+
+
+        /*
+        ==========================================================
+        RESET
         ==========================================================
         */
 
@@ -889,42 +1078,57 @@
 
             selectedFiles = [];
 
+
             fileInput.value = "";
 
 
-            document
-                .getElementById("file-count-display")
-                .innerText =
-                "Multiple files supported. 24h expiration.";
+            fileCountDisplay.innerText =
+                "TXT files only. Maximum 900 KB per file.";
 
 
-            uploadSuccess.classList.add("hidden");
+            uploadSuccess.classList.add(
+                "hidden"
+            );
 
-            uploadLoading.classList.add("hidden");
 
-            dropZone.classList.remove("hidden");
+            uploadLoading.classList.add(
+                "hidden"
+            );
 
-            uploadBtn.classList.add("hidden");
+
+            dropZone.classList.remove(
+                "hidden"
+            );
+
+
+            uploadBtn.classList.add(
+                "hidden"
+            );
 
         }
 
 
         /*
         ==========================================================
-        SEARCH FILE
+        SEARCH
         ==========================================================
         */
 
         document
             .getElementById("search-btn")
-            .addEventListener("click", searchFiles);
+            .addEventListener(
+                "click",
+                searchFiles
+            );
 
 
         searchKey.addEventListener(
             "keydown",
-            (event) => {
+            event => {
 
-                if (event.key === "Enter") {
+                if (
+                    event.key === "Enter"
+                ) {
 
                     searchFiles();
 
@@ -934,58 +1138,72 @@
         );
 
 
+        /*
+        ==========================================================
+        FIND FILES
+        ==========================================================
+        */
+
         async function searchFiles() {
 
-            const keyInput =
+            const key =
                 searchKey.value
                     .trim()
                     .toUpperCase();
 
 
-            if (!keyInput) {
+            searchError.classList.add(
+                "hidden"
+            );
+
+
+            downloadResults.classList.add(
+                "hidden"
+            );
+
+
+            fileList.innerHTML = "";
+
+
+            if (
+                !/^[A-Z0-9]{6}$/.test(key)
+            ) {
+
+                showSearchError(
+                    "Enter a valid 6-character secret key."
+                );
 
                 return;
 
             }
 
 
-            searchError.classList.add("hidden");
-
-            downloadResults.classList.add("hidden");
-
-            fileList.innerHTML = "";
-
-
             try {
 
                 /*
-                ----------------------------------------------
-                GET FIRESTORE DOCUMENT
-                ----------------------------------------------
+                Get parent document.
                 */
 
-                const docRef =
+                const parentRef =
                     doc(
                         db,
                         "shared_files",
-                        keyInput
+                        key
                     );
 
 
-                const docSnap =
-                    await getDoc(docRef);
+                const parentSnap =
+                    await getDoc(
+                        parentRef
+                    );
 
 
-                /*
-                ----------------------------------------------
-                DOCUMENT DOES NOT EXIST
-                ----------------------------------------------
-                */
-
-                if (!docSnap.exists()) {
+                if (
+                    !parentSnap.exists()
+                ) {
 
                     showSearchError(
-                        "Invalid key. File does not exist."
+                        "Invalid key. No files were found."
                     );
 
                     return;
@@ -993,23 +1211,20 @@
                 }
 
 
-                const data =
-                    docSnap.data();
+                const parentData =
+                    parentSnap.data();
 
 
                 /*
-                ----------------------------------------------
-                EXPIRATION CHECK
-                ----------------------------------------------
+                Check expiration.
                 */
 
                 if (
-                    !data.expiresAt ||
-                    typeof data.expiresAt.toMillis !== "function"
+                    !parentData.expiresAt
                 ) {
 
                     showSearchError(
-                        "Invalid file metadata."
+                        "Invalid file record."
                     );
 
                     return;
@@ -1017,17 +1232,13 @@
                 }
 
 
-                const now =
-                    Date.now();
-
-
                 if (
-                    now >
-                    data.expiresAt.toMillis()
+                    Date.now() >
+                    parentData.expiresAt.toMillis()
                 ) {
 
                     showSearchError(
-                        "This file key has expired."
+                        "This secret key has expired."
                     );
 
                     return;
@@ -1036,18 +1247,30 @@
 
 
                 /*
-                ----------------------------------------------
-                DISPLAY FILES
-                ----------------------------------------------
+                Get all TXT file documents.
                 */
 
+                const filesRef =
+                    collection(
+                        db,
+                        "shared_files",
+                        key,
+                        "files"
+                    );
+
+
+                const filesSnapshot =
+                    await getDocs(
+                        filesRef
+                    );
+
+
                 if (
-                    !Array.isArray(data.files) ||
-                    data.files.length === 0
+                    filesSnapshot.empty
                 ) {
 
                     showSearchError(
-                        "No files were found."
+                        "No TXT files were found."
                     );
 
                     return;
@@ -1055,10 +1278,18 @@
                 }
 
 
-                data.files.forEach(
-                    (file) => {
+                /*
+                Display files.
+                */
 
-                        createFileDownloadItem(
+                filesSnapshot.forEach(
+                    fileDoc => {
+
+                        const file =
+                            fileDoc.data();
+
+
+                        createFileItem(
                             file
                         );
 
@@ -1075,34 +1306,16 @@
             catch (error) {
 
                 console.error(
-                    "Firestore retrieval error:",
+                    "Search error:",
                     error
                 );
 
 
                 showSearchError(
-                    "Error retrieving files. Check your Firebase configuration and rules."
+                    "Could not retrieve the files. Check your Firestore rules."
                 );
 
             }
-
-        }
-
-
-        /*
-        ==========================================================
-        SHOW SEARCH ERROR
-        ==========================================================
-        */
-
-        function showSearchError(message) {
-
-            searchError.innerText =
-                message;
-
-            searchError.classList.remove(
-                "hidden"
-            );
 
         }
 
@@ -1113,26 +1326,22 @@
         ==========================================================
         */
 
-        function createFileDownloadItem(file) {
+        function createFileItem(file) {
 
             const li =
                 document.createElement("li");
 
 
             li.className =
-                "flex justify-between items-center bg-gray-50 p-3 rounded border border-gray-200";
+                "bg-gray-50 p-4 rounded border border-gray-200";
 
 
-            const info =
-                document.createElement("div");
-
-
-            info.className =
-                "flex flex-col truncate pr-4";
-
+            /*
+            File name
+            */
 
             const name =
-                document.createElement("span");
+                document.createElement("div");
 
 
             name.className =
@@ -1143,100 +1352,117 @@
                 file.name;
 
 
+            /*
+            File size
+            */
+
             const size =
-                document.createElement("span");
+                document.createElement("div");
 
 
             size.className =
-                "text-xs text-gray-500";
+                "text-xs text-gray-500 mt-1";
 
 
             size.textContent =
-                file.size || "";
+                formatBytes(file.size);
 
 
-            info.appendChild(name);
+            /*
+            Buttons container
+            */
 
-            info.appendChild(size);
-
-
-            const download =
-                document.createElement("a");
-
-
-            download.href =
-                file.url;
+            const buttons =
+                document.createElement("div");
 
 
-            download.target =
-                "_blank";
+            buttons.className =
+                "flex gap-2 mt-3";
 
 
-            download.rel =
-                "noopener noreferrer";
+            /*
+            View button
+            */
+
+            const viewButton =
+                document.createElement("button");
 
 
-            download.textContent =
+            viewButton.className =
+                "flex-1 bg-gray-700 hover:bg-gray-800 text-white px-3 py-2 text-xs font-semibold rounded";
+
+
+            viewButton.textContent =
+                "View";
+
+
+            viewButton.addEventListener(
+                "click",
+                () => {
+
+                    viewTextFile(
+                        file
+                    );
+
+                }
+            );
+
+
+            /*
+            Download button
+            */
+
+            const downloadButton =
+                document.createElement("button");
+
+
+            downloadButton.className =
+                "flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-xs font-semibold rounded";
+
+
+            downloadButton.textContent =
                 "Download";
 
 
-            download.className =
-                "bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-xs font-semibold rounded transition-colors";
+            downloadButton.addEventListener(
+                "click",
+                () => {
+
+                    downloadTextFile(
+                        file
+                    );
+
+                }
+            );
 
 
-            li.appendChild(info);
-
-            li.appendChild(download);
-
-
-            fileList.appendChild(li);
-
-        }
+            buttons.appendChild(
+                viewButton
+            );
 
 
-        /*
-        ==========================================================
-        FORMAT FILE SIZE
-        ==========================================================
-        */
-
-        function formatBytes(bytes) {
-
-            if (bytes === 0) {
-
-                return "0 Bytes";
-
-            }
+            buttons.appendChild(
+                downloadButton
+            );
 
 
-            const k = 1024;
+            li.appendChild(
+                name
+            );
 
 
-            const sizes = [
-                "Bytes",
-                "KB",
-                "MB",
-                "GB",
-                "TB"
-            ];
+            li.appendChild(
+                size
+            );
 
 
-            const i =
-                Math.floor(
-                    Math.log(bytes) /
-                    Math.log(k)
-                );
+            li.appendChild(
+                buttons
+            );
 
 
-            return (
-                parseFloat(
-                    (
-                        bytes /
-                        Math.pow(k, i)
-                    ).toFixed(2)
-                ) +
-                " " +
-                sizes[i]
+            fileList.appendChild(
+                li
             );
 
         }
@@ -1244,22 +1470,216 @@
 
         /*
         ==========================================================
-        FIREBASE READY
+        VIEW TXT
+        ==========================================================
+        */
+
+        function viewTextFile(file) {
+
+            const viewer =
+                window.open(
+                    "",
+                    "_blank"
+                );
+
+
+            if (!viewer) {
+
+                alert(
+                    "Please allow popups to view the file."
+                );
+
+                return;
+
+            }
+
+
+            viewer.document.title =
+                file.name;
+
+
+            const escaped =
+                escapeHtml(
+                    file.content
+                );
+
+
+            viewer.document.body.style =
+                "margin:0;background:#111827;color:#f9fafb;font-family:monospace;";
+
+
+            viewer.document.body.innerHTML =
+                `
+                    <div style="padding:20px;max-width:1000px;margin:auto;">
+                        <h2 style="font-family:sans-serif;margin-bottom:15px;">
+                            ${escapeHtml(file.name)}
+                        </h2>
+
+                        <pre style="
+                            white-space:pre-wrap;
+                            word-break:break-word;
+                            background:#1f2937;
+                            padding:20px;
+                            border-radius:8px;
+                            overflow:auto;
+                        ">${escaped}</pre>
+                    </div>
+                `;
+
+        }
+
+
+        /*
+        ==========================================================
+        DOWNLOAD TXT
+        ==========================================================
+        */
+
+        function downloadTextFile(file) {
+
+            const blob =
+                new Blob(
+                    [file.content],
+                    {
+                        type:
+                            "text/plain;charset=utf-8"
+                    }
+                );
+
+
+            const url =
+                URL.createObjectURL(
+                    blob
+                );
+
+
+            const link =
+                document.createElement("a");
+
+
+            link.href =
+                url;
+
+
+            link.download =
+                file.name ||
+                "fastfile.txt";
+
+
+            document.body.appendChild(
+                link
+            );
+
+
+            link.click();
+
+
+            link.remove();
+
+
+            URL.revokeObjectURL(
+                url
+            );
+
+        }
+
+
+        /*
+        ==========================================================
+        ESCAPE HTML
+        ==========================================================
+        */
+
+        function escapeHtml(value) {
+
+            return String(value)
+                .replace(
+                    /&/g,
+                    "&amp;"
+                )
+                .replace(
+                    /</g,
+                    "&lt;"
+                )
+                .replace(
+                    />/g,
+                    "&gt;"
+                )
+                .replace(
+                    /"/g,
+                    "&quot;"
+                )
+                .replace(
+                    /'/g,
+                    "&#039;"
+                );
+
+        }
+
+
+        /*
+        ==========================================================
+        FORMAT SIZE
+        ==========================================================
+        */
+
+        function formatBytes(bytes) {
+
+            if (
+                !bytes ||
+                bytes === 0
+            ) {
+
+                return "0 Bytes";
+
+            }
+
+
+            const units =
+                [
+                    "Bytes",
+                    "KB",
+                    "MB"
+                ];
+
+
+            const index =
+                Math.floor(
+                    Math.log(bytes) /
+                    Math.log(1024)
+                );
+
+
+            return (
+                parseFloat(
+                    (
+                        bytes /
+                        Math.pow(
+                            1024,
+                            index
+                        )
+                    ).toFixed(2)
+                ) +
+                " " +
+                units[index]
+            );
+
+        }
+
+
+        /*
+        ==========================================================
+        READY
         ==========================================================
         */
 
         console.log(
-            "FastFile Firebase initialized successfully."
+            "FastFile initialized."
         );
 
         console.log(
-            "Project:",
+            "Firebase project:",
             firebaseConfig.projectId
-        );
-
-        console.log(
-            "Storage bucket:",
-            firebaseConfig.storageBucket
         );
 
     </script>
