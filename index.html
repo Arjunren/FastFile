@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShareBox - Firebase Powered</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .loader {
+            border-top-color: #2563eb;
+            animation: spinner 1s linear infinite;
+        }
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
+
+    <!-- Navbar & Navigation -->
+    <nav class="bg-white border-b border-gray-200">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-xl font-bold text-blue-600">ShareBox</span>
+                </div>
+                <div class="flex space-x-4 items-center">
+                    <button id="tab-upload-btn" class="text-blue-600 border-b-2 border-blue-600 px-3 py-2 text-sm font-medium transition-colors">Upload</button>
+                    <button id="tab-download-btn" class="text-gray-500 hover:text-gray-700 px-3 py-2 text-sm font-medium transition-colors">Download</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="flex-grow flex items-center justify-center p-4">
+        <div class="w-full max-w-lg bg-white rounded-xl shadow-md border border-gray-100 p-6 md:p-8">
+            
+            <!-- UPLOAD TAB -->
+            <div id="upload-view" class="block">
+                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Upload Files</h2>
+                
+                <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer bg-gray-50">
+                    <input type="file" id="file-input" multiple class="hidden">
+                    <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <p class="text-gray-600 mb-1">Click to browse or drag & drop</p>
+                    <p class="text-xs text-gray-400" id="file-count-display">Multiple files supported. 24h expiration.</p>
+                </div>
+
+                <button id="upload-btn" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors hidden">
+                    Start Cloud Upload
+                </button>
+
+                <!-- Loading State -->
+                <div id="upload-loading" class="hidden mt-6 flex flex-col items-center">
+                    <div class="loader rounded-full border-4 border-gray-200 h-10 w-10 mb-3"></div>
+                    <p id="upload-progress-text" class="text-sm text-gray-600 font-medium">Uploading to Firebase...</p>
+                </div>
+
+                <!-- Success State -->
+                <div id="upload-success" class="hidden mt-6 bg-green-50 border border-green-200 rounded-lg p-5">
+                    <h3 class="text-green-800 font-bold mb-2 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        Upload Successful!
+                    </h3>
+                    <p class="text-xs text-gray-600 mb-4">Files will automatically expire 24 hours after upload.</p>
+                    
+                    <div class="bg-white p-3 rounded border border-gray-200 flex justify-between items-center mb-3">
+                        <span id="secret-key-display" class="font-mono text-lg font-bold text-gray-800 tracking-wider">XXXXXX</span>
+                        <button id="copy-key-btn" class="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center">
+                            Copy Secret Key
+                        </button>
+                    </div>
+
+                    <p id="upload-time-display" class="text-xs text-gray-500 mb-4"></p>
+
+                    <button id="reset-upload-btn" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded transition-colors">
+                        Upload Another File
+                    </button>
+                </div>
+            </div>
+
+            <!-- DOWNLOAD TAB -->
+            <div id="download-view" class="hidden">
+                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Download Files</h2>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Enter Secret Key</label>
+                    <div class="flex">
+                        <input type="text" id="search-key" placeholder="e.g. A1B2C3" class="uppercase font-mono flex-grow border border-gray-300 rounded-l-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button id="search-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 rounded-r-lg transition-colors">
+                            Search
+                        </button>
+                    </div>
+                    <p id="search-error" class="text-red-500 text-sm mt-2 hidden"></p>
+                </div>
+
+                <div id="download-results" class="hidden">
+                    <h3 class="font-bold text-gray-800 mb-3 border-b pb-2">Available Files</h3>
+                    <ul id="file-list" class="space-y-3 mb-4 max-h-60 overflow-y-auto pr-2"></ul>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer / Credits -->
+    <footer class="bg-white border-t border-gray-200 mt-auto py-6">
+        <div class="max-w-4xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between">
+            <p class="text-sm text-gray-500">Open Source File Sharing System</p>
+            <p class="text-sm text-gray-500 mt-2 md:mt-0 font-medium">
+                Created by <span class="text-gray-800 font-bold">Arjunren Von</span> | 
+                <a href="https://github.com/Arjunren" target="_blank" class="text-blue-600 hover:underline inline-flex items-center ml-1">
+                    /Arjunren
+                </a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Firebase v10 Modular SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+        import { getFirestore, doc, setDoc, getDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // REPLACE WITH YOUR FIREBASE CONFIG
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase Services
+        const app = initializeApp(firebaseConfig);
+        const storage = getStorage(app);
+        const db = getFirestore(app);
+
+        // State & DOM Elements
+        let selectedFiles = [];
+        const HOURS_24_MS = 24 * 60 * 60 * 1000;
+
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const uploadBtn = document.getElementById('upload-btn');
+        const uploadView = document.getElementById('upload-view');
+        const downloadView = document.getElementById('download-view');
+
+        // Tab Navigation
+        document.getElementById('tab-upload-btn').addEventListener('click', () => switchTab('upload'));
+        document.getElementById('tab-download-btn').addEventListener('click', () => switchTab('download'));
+
+        function switchTab(tab) {
+            if (tab === 'upload') {
+                uploadView.classList.remove('hidden');
+                downloadView.classList.add('hidden');
+                document.getElementById('tab-upload-btn').className = "text-blue-600 border-b-2 border-blue-600 px-3 py-2 text-sm font-medium";
+                document.getElementById('tab-download-btn').className = "text-gray-500 hover:text-gray-700 px-3 py-2 text-sm font-medium";
+            } else {
+                uploadView.classList.add('hidden');
+                downloadView.classList.remove('hidden');
+                document.getElementById('tab-upload-btn').className = "text-gray-500 hover:text-gray-700 px-3 py-2 text-sm font-medium";
+                document.getElementById('tab-download-btn').className = "text-blue-600 border-b-2 border-blue-600 px-3 py-2 text-sm font-medium";
+            }
+        }
+
+        // File Selection Handlers
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('bg-blue-50'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('bg-blue-50'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('bg-blue-50');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                selectedFiles = Array.from(files);
+                document.getElementById('file-count-display').innerText = `${selectedFiles.length} file(s) selected`;
+                uploadBtn.classList.remove('hidden');
+            }
+        }
+
+        // Upload Process to Firebase Storage & Firestore
+        uploadBtn.addEventListener('click', async () => {
+            if (selectedFiles.length === 0) return;
+
+            uploadBtn.classList.add('hidden');
+            dropZone.classList.add('hidden');
+            document.getElementById('upload-loading').classList.remove('hidden');
+
+            const secretKey = Math.random().toString(36).substring(2, 8).toUpperCase();
+            const now = Date.now();
+            const expiresAt = now + HOURS_24_MS;
+            const uploadedFilesData = [];
+
+            try {
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    const file = selectedFiles[i];
+                    document.getElementById('upload-progress-text').innerText = `Uploading file ${i + 1} of ${selectedFiles.length}...`;
+                    
+                    // Path: uploads/{secretKey}/{fileName}
+                    const storageRef = ref(storage, `uploads/${secretKey}/${file.name}`);
+                    const uploadTask = await uploadBytesResumable(storageRef, file);
+                    const downloadUrl = await getDownloadURL(uploadTask.ref);
+
+                    uploadedFilesData.push({
+                        name: file.name,
+                        size: formatBytes(file.size),
+                        url: downloadUrl
+                    });
+                }
+
+                // Write metadata batch to Cloud Firestore
+                await setDoc(doc(db, "shared_files", secretKey), {
+                    secretKey: secretKey,
+                    createdAt: Timestamp.fromMillis(now),
+                    expiresAt: Timestamp.fromMillis(expiresAt),
+                    files: uploadedFilesData
+                });
+
+                // Display Success
+                document.getElementById('upload-loading').classList.add('hidden');
+                document.getElementById('upload-success').classList.remove('hidden');
+                document.getElementById('secret-key-display').innerText = secretKey;
+                document.getElementById('upload-time-display').innerText = `Uploaded: ${new Date(now).toLocaleString()}`;
+
+            } catch (error) {
+                console.error("Firebase Error:", error);
+                alert("Upload failed. Ensure Firebase config credentials are set up properly.");
+                resetUpload();
+            }
+        });
+
+        // Copy Key Button
+        document.getElementById('copy-key-btn').addEventListener('click', () => {
+            const key = document.getElementById('secret-key-display').innerText;
+            navigator.clipboard.writeText(key).then(() => alert(`Secret Key ${key} copied!`));
+        });
+
+        // Reset Upload State
+        document.getElementById('reset-upload-btn').addEventListener('click', resetUpload);
+        function resetUpload() {
+            selectedFiles = [];
+            fileInput.value = '';
+            document.getElementById('file-count-display').innerText = 'Multiple files supported. 24h expiration.';
+            document.getElementById('upload-success').classList.add('hidden');
+            document.getElementById('upload-loading').classList.add('hidden');
+            dropZone.classList.remove('hidden');
+            uploadBtn.classList.add('hidden');
+        }
+
+        // Search and Download Logic
+        document.getElementById('search-btn').addEventListener('click', async () => {
+            const keyInput = document.getElementById('search-key').value.trim().toUpperCase();
+            const errorMsg = document.getElementById('search-error');
+            const resultsDiv = document.getElementById('download-results');
+            const fileList = document.getElementById('file-list');
+
+            if (!keyInput) return;
+
+            errorMsg.classList.add('hidden');
+            resultsDiv.classList.add('hidden');
+
+            try {
+                const docRef = doc(db, "shared_files", keyInput);
+                const docSnap = await getDoc(docRef);
+
+                if (!docSnap.exists()) {
+                    errorMsg.innerText = "Invalid key. File does not exist.";
+                    errorMsg.classList.remove('hidden');
+                    return;
+                }
+
+                const data = docSnap.data();
+                const now = Date.now();
+
+                // 24-Hour Expiration Check
+                if (now > data.expiresAt.toMillis()) {
+                    errorMsg.innerText = "This file key has expired (24-hour limit exceeded).";
+                    errorMsg.classList.remove('hidden');
+                    return;
+                }
+
+                // Render File Download Links
+                fileList.innerHTML = '';
+                data.files.forEach(file => {
+                    const li = document.createElement('li');
+                    li.className = "flex justify-between items-center bg-gray-50 p-3 rounded border border-gray-200";
+                    li.innerHTML = `
+                        <div class="flex flex-col truncate pr-4">
+                            <span class="font-semibold text-sm text-gray-800 truncate">${file.name}</span>
+                            <span class="text-xs text-gray-500">${file.size}</span>
+                        </div>
+                        <a href="${file.url}" target="_blank" download class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-xs font-semibold rounded transition-colors flex items-center">
+                            Download
+                        </a>
+                    `;
+                    fileList.appendChild(li);
+                });
+
+                resultsDiv.classList.remove('hidden');
+
+            } catch (err) {
+                console.error("Firestore retrieval error:", err);
+                errorMsg.innerText = "Error retrieving files. Check your connection or Firebase config.";
+                errorMsg.classList.remove('hidden');
+            }
+        });
+
+        // Helper: Convert bytes to readable strings
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    </script>
+</body>
+</html>
