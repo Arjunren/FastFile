@@ -321,7 +321,12 @@
             const incoming = Array.from(files);
             if (incoming.length === 0) return;
 
-            const invalid = incoming.find(file => file.type !== "text/plain" && !file.name.toLowerCase().endsWith(".txt"));
+            const invalid = incoming.find(file =>
+    file.type !== "text/plain" &&
+    ![".txt", ".bat"].some(ext =>
+        file.name.toLowerCase().endsWith(ext)
+    )
+);
             if (invalid) {
                 showToast(`"${invalid.name}" is not a TXT file. FastFile accepts plain text files only.`, 'error');
                 return;
