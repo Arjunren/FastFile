@@ -322,7 +322,6 @@
             if (incoming.length === 0) return;
 
             const invalid = incoming.find(file =>
-    file.type !== "text/plain" &&
     ![".txt", ".bat"].some(ext =>
         file.name.toLowerCase().endsWith(ext)
     )
