@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FastFile - Modern TXT Sharing</title>
+    <title>FastFile - Temporary File Sharing</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     
@@ -74,13 +74,13 @@
             <!-- ================= UPLOAD VIEW ================= -->
             <div id="upload-view" class="space-y-6">
                 <div class="text-center">
-                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Send TXT Files</h1>
-                    <p class="text-sm text-slate-500 mt-1">Share secure text files instantly with a secret 6-digit key.</p>
+                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Send Files</h1>
+                    <p class="text-sm text-slate-500 mt-1">Share files instantly with a private 6-character key.</p>
                 </div>
 
                 <!-- DROP ZONE -->
                 <div id="drop-zone" class="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center hover:border-blue-500/80 transition-all cursor-pointer bg-slate-50/50 hover:bg-blue-50/30 group">
-                    <input type="file" id="file-input" multiple accept=".txt,text/plain" class="hidden">
+                    <input type="file" id="file-input" multiple class="hidden">
                     
                     <div class="w-14 h-14 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center mx-auto mb-4 text-slate-400 group-hover:text-blue-600 group-hover:scale-110 transition-all duration-300">
                         <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -92,7 +92,7 @@
                         Click to browse <span class="text-slate-400 font-normal">or drag & drop</span>
                     </p>
                     <p class="text-xs text-slate-400 mt-2 font-medium" id="file-count-display">
-                        TXT files only (Max 900 KB per file)
+                        Any file type (Max 1 MB per file)
                     </p>
                 </div>
 
@@ -144,7 +144,7 @@
             <!-- ================= DOWNLOAD VIEW ================= -->
             <div id="download-view" class="hidden space-y-6">
                 <div class="text-center">
-                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Receive TXT Files</h1>
+                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Receive Files</h1>
                     <p class="text-sm text-slate-500 mt-1">Enter your 6-character key to access your files.</p>
                 </div>
 
@@ -185,7 +185,7 @@
 
                 <!-- SEARCH RESULTS LIST -->
                 <div id="download-results" class="hidden space-y-3">
-                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">Available TXT Files</h3>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">Available Files</h3>
                     <ul id="file-list" class="space-y-2.5 max-h-80 overflow-y-auto pr-1"></ul>
                 </div>
             </div>
@@ -197,7 +197,7 @@
     <!-- FOOTER WITH GITHUB ACCOUNT CREDIT -->
     <footer class="bg-white/80 backdrop-blur-md border-t border-slate-200/80 py-6 mt-auto">
         <div class="max-w-5xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-            <p class="font-medium">FastFile — Open Source TXT File Sharing System</p>
+            <p class="font-medium">FastFile — Open Source Temporary File Sharing</p>
             
             <div class="flex items-center space-x-1.5 font-medium">
                 <span>Created by</span>
@@ -230,7 +230,10 @@
         const db = getFirestore(app);
 
         const EXPIRATION_MS = 24 * 60 * 60 * 1000;
-        const MAX_FILE_BYTES = 900000;
+        const MAX_FILE_BYTES = 1000000;
+        // Firestore documents are limited to 1 MiB. Keeping raw chunks at 450 KB
+        // leaves room for Base64 encoding and document metadata.
+        const CHUNK_BYTES = 450000;
 
         let selectedFiles = [];
 
@@ -321,25 +324,39 @@
             const incoming = Array.from(files);
             if (incoming.length === 0) return;
 
-            const invalid = incoming.find(file =>
-    ![".txt", ".bat"].some(ext =>
-        file.name.toLowerCase().endsWith(ext)
-    )
-);
-            if (invalid) {
-                showToast(`"${invalid.name}" is not a TXT file. FastFile accepts plain text files only.`, 'error');
+            const unnamed = incoming.find(file => !file.name);
+            if (unnamed) {
+                showToast("One of the selected files has no filename.", 'error');
                 return;
             }
 
             const tooLarge = incoming.find(file => file.size > MAX_FILE_BYTES);
             if (tooLarge) {
-                showToast(`"${tooLarge.name}" exceeds the 900 KB size limit.`, 'error');
+                showToast(`"${tooLarge.name}" exceeds the 1 MB size limit.`, 'error');
                 return;
             }
 
             selectedFiles = incoming;
             fileCountDisplay.innerText = `${selectedFiles.length} file(s) selected (${formatBytes(selectedFiles.reduce((a, b) => a + b.size, 0))})`;
             uploadBtn.classList.remove("hidden");
+        }
+
+        function bytesToBase64(bytes) {
+            let binary = "";
+            const step = 0x8000;
+            for (let start = 0; start < bytes.length; start += step) {
+                binary += String.fromCharCode(...bytes.subarray(start, start + step));
+            }
+            return btoa(binary);
+        }
+
+        async function fileToBase64Chunks(file) {
+            const bytes = new Uint8Array(await file.arrayBuffer());
+            const chunks = [];
+            for (let start = 0; start < bytes.length; start += CHUNK_BYTES) {
+                chunks.push(bytesToBase64(bytes.subarray(start, start + CHUNK_BYTES)));
+            }
+            return chunks;
         }
 
         // Generate Secret Key
@@ -387,21 +404,31 @@
                 for (let i = 0; i < selectedFiles.length; i++) {
                     const file = selectedFiles[i];
                     progressText.innerText = `Saving (${i + 1}/${selectedFiles.length}): ${file.name}`;
-                    const content = await file.text();
-                    const byteSize = new TextEncoder().encode(content).length;
+                    const byteSize = file.size;
 
                     if (byteSize > MAX_FILE_BYTES) {
-                        throw new Error(`"${file.name}" exceeds maximum allowed UTF-8 size.`);
+                        throw new Error(`"${file.name}" exceeds the 1 MB size limit.`);
                     }
 
                     const fileId = crypto.randomUUID();
+                    const chunks = await fileToBase64Chunks(file);
+
                     await setDoc(doc(db, "shared_files", secretKey, "files", fileId), {
                         name: file.name,
                         size: byteSize,
-                        content: content,
+                        type: file.type || "application/octet-stream",
+                        encoding: "base64-chunks",
+                        chunkCount: chunks.length,
                         createdAt: Timestamp.fromMillis(now),
                         expiresAt: Timestamp.fromMillis(expiresAt)
                     });
+
+                    for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
+                        await setDoc(doc(db, "shared_files", secretKey, "files", fileId, "chunks", String(chunkIndex).padStart(4, "0")), {
+                            index: chunkIndex,
+                            data: chunks[chunkIndex]
+                        });
+                    }
                 }
 
                 uploadLoading.classList.add("hidden");
@@ -413,7 +440,7 @@
             } catch (error) {
                 console.error("Firestore error:", error);
                 uploadLoading.classList.add("hidden");
-                showToast(error.message || "Could not save the TXT file.", "error");
+                showToast(error.message || "Could not save the file.", "error");
                 resetUpload();
             }
         });
@@ -434,7 +461,7 @@
         function resetUpload() {
             selectedFiles = [];
             fileInput.value = "";
-            fileCountDisplay.innerText = "TXT files only (Max 900 KB per file)";
+            fileCountDisplay.innerText = "Any file type (Max 1 MB per file)";
             uploadSuccess.classList.add("hidden");
             uploadLoading.classList.add("hidden");
             dropZone.classList.remove("hidden");
@@ -489,7 +516,7 @@
                 }
 
                 filesSnapshot.forEach(fileDoc => {
-                    createFileItem(fileDoc.data());
+                    createFileItem(fileDoc.data(), fileDoc.id, key);
                 });
 
                 downloadResults.classList.remove("hidden");
@@ -508,7 +535,7 @@
         }
 
         // Render File Download Cards
-        function createFileItem(file) {
+        function createFileItem(file, fileId, secretKey) {
             const li = document.createElement("li");
             li.className = "bg-slate-50 p-4 rounded-xl border border-slate-200/80 flex items-center justify-between gap-4 hover:border-slate-300 transition-all";
 
@@ -519,7 +546,7 @@
                 </div>
                 <div class="flex items-center space-x-2 shrink-0">
                     <button class="view-btn bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">
-                        View
+                        Open
                     </button>
                     <button class="dl-btn bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-colors">
                         Download
@@ -527,43 +554,83 @@
                 </div>
             `;
 
-            li.querySelector(".view-btn").addEventListener("click", () => viewTextFile(file));
-            li.querySelector(".dl-btn").addEventListener("click", () => downloadTextFile(file));
+            li.querySelector(".view-btn").addEventListener("click", () => openFile(file, fileId, secretKey));
+            li.querySelector(".dl-btn").addEventListener("click", () => downloadFile(file, fileId, secretKey));
 
             fileList.appendChild(li);
         }
 
-        // View File in New Tab
-        function viewTextFile(file) {
+        function base64ToBytes(base64) {
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            return bytes;
+        }
+
+        async function getFileBlob(file, fileId, secretKey) {
+            // Keep downloads compatible with files uploaded by earlier TXT-only versions.
+            if (typeof file.content === "string") {
+                return new Blob([file.content], { type: file.type || "text/plain;charset=utf-8" });
+            }
+
+            if (file.encoding !== "base64-chunks" || !Number.isInteger(file.chunkCount)) {
+                throw new Error("This file uses an unsupported storage format.");
+            }
+
+            const chunksSnapshot = await getDocs(collection(db, "shared_files", secretKey, "files", fileId, "chunks"));
+            if (chunksSnapshot.size !== file.chunkCount) {
+                throw new Error("This file is incomplete or has expired.");
+            }
+
+            const chunks = chunksSnapshot.docs
+                .map(chunkDoc => chunkDoc.data())
+                .sort((first, second) => first.index - second.index);
+
+            if (chunks.some((chunk, index) => chunk.index !== index || typeof chunk.data !== "string")) {
+                throw new Error("This file could not be reconstructed safely.");
+            }
+
+            const bytes = chunks.map(chunk => base64ToBytes(chunk.data));
+            return new Blob(bytes, { type: file.type || "application/octet-stream" });
+        }
+
+        // Open the original file in a new tab when the browser supports its format.
+        async function openFile(file, fileId, secretKey) {
             const viewer = window.open("", "_blank");
             if (!viewer) {
-                showToast("Popup blocked! Allow popups to preview text.", "error");
+                showToast("Popup blocked! Allow popups to open files.", "error");
                 return;
             }
 
-            viewer.document.title = file.name;
-            const escaped = escapeHtml(file.content);
-            viewer.document.body.style = "margin:0;background:#0f172a;color:#f8fafc;font-family:monospace;";
-            viewer.document.body.innerHTML = `
-                <div style="padding:24px;max-width:900px;margin:auto;">
-                    <h2 style="font-family:sans-serif;margin-bottom:16px;color:#93c5fd;">${escapeHtml(file.name)}</h2>
-                    <pre style="white-space:pre-wrap;word-break:break-word;background:#1e293b;padding:20px;border-radius:12px;border:1px solid #334155;">${escaped}</pre>
-                </div>
-            `;
+            try {
+                viewer.document.title = file.name;
+                viewer.document.body.textContent = "Loading file...";
+                const blob = await getFileBlob(file, fileId, secretKey);
+                const url = URL.createObjectURL(blob);
+                viewer.location.href = url;
+                setTimeout(() => URL.revokeObjectURL(url), 60000);
+            } catch (error) {
+                viewer.close();
+                showToast(error.message || "Could not open the file.", "error");
+            }
         }
 
         // Download File Locally
-        function downloadTextFile(file) {
-            const blob = new Blob([file.content], { type: "text/plain;charset=utf-8" });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = file.name || "fastfile.txt";
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            URL.revokeObjectURL(url);
-            showToast(`Downloading ${file.name}...`, 'success');
+        async function downloadFile(file, fileId, secretKey) {
+            try {
+                const blob = await getFileBlob(file, fileId, secretKey);
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = file.name || "fastfile-download";
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(url);
+                showToast(`Downloading ${file.name}...`, 'success');
+            } catch (error) {
+                showToast(error.message || "Could not download the file.", "error");
+            }
         }
 
         function escapeHtml(value) {
